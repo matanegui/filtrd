@@ -1,0 +1,20 @@
+{
+  "game": {
+    "author": "game developer",
+    "title": "Your cart's title",
+    "desc": "A short description",
+    "cart": "loo.tic",
+    "input": "gamepad",
+    "backup": false
+  },
+  "tic": {
+    "ticExecutable": "tic80",
+    "cartsDirectory": "./cart"
+  },
+  "compression": {
+    "compressedFile": "build/compressed.js",
+    "indentLevel": 1,
+    "compress": true,
+    "mangle": true
+  }
+}

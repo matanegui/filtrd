@@ -1,0 +1,12 @@
+{
+    "name": "loo",
+    "version": "0.0.0",
+    "description": "Test game thingy",
+    "main": "src/index.js",
+    "scripts": {
+        "start": "tsc80 run"
+    },
+    "author": "Misteki",
+    "license": "ISC",
+    "dependencies": {}
+}
