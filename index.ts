@@ -1,8 +1,39 @@
 //  *CONSTANTS  //
 const SCREEN_WIDTH: number = 240;
 const SCREEN_HEIGHT: number = 136;
+// format: dark, primary, light, complement //
+const PALETTES: any = {
+    default: [[32, 29, 36], [103, 89, 122], [207, 232, 173], [230, 85, 125]],
+    cold: [[2, 28, 39], [2, 128, 144], [240, 243, 189], [224, 202, 60]],
+    heat: [[42, 3, 1], [145, 23, 31], [227, 192, 211], [245, 203, 92]],
+    mellow: [[50, 48, 54], [181, 131, 141], [255, 205, 178], [255, 180, 162]]
+};
+const DEFAULT_PALETTE: string = 'default';
 const ANIMATIONS: any = {};
 
+//  *UTILS  //
+const switch_palette: (current_palette: string) => string = (current_palette) => {
+    const palette_ids: string[] = Object.keys(PALETTES);
+    const current_palette_index = palette_ids.indexOf(current_palette);
+    const new_palette_id = current_palette_index + 1 < palette_ids.length ? palette_ids[current_palette_index + 1] : palette_ids[0];
+    swap_palette(new_palette_id);
+    return new_palette_id;
+}
+
+const swap_palette: (id: string) => void = (id) => {
+    const palette: number[][] = PALETTES[id];
+    if (palette) {
+        for (let i = 0; i < 4; i++) {
+            const colors: number[] = palette[i];
+            const color_address_offset = i * 3;
+            poke(0x3FC0 + color_address_offset, colors[0]);
+            poke(0x3FC0 + color_address_offset + 1, colors[1]);
+            poke(0x3FC0 + color_address_offset + 2, colors[2]);
+        }
+    }
+}
+
+//  *ANIMATION  //
 const create_animation: (id: string, speed: number, width: number, height: number) => Animation = (id, speed = 0, width = 1, height = 1) => {
     ANIMATIONS[id] = {};
     return {
@@ -34,8 +65,18 @@ const play_animation: (animation: Animation, state: string) => void = (animation
     }
 };
 
-const stop_animation: (animation: Animation) => void = (animation) => {
+const stop_animation: (animation: Animation, stop_frame?: number) => void = (animation, stop_frame) => {
     animation.playing = false;
+    if (stop_frame) {
+        const frame: number = ANIMATIONS[animation.id][animation.state][stop_frame];
+        if (frame) {
+            animation.timestamp = 0;
+            animation.frame_index = 0;
+            animation.frame = frame;
+        } else {
+            trace(`Tried to played invalid frame: ${frame} on animation stop.`);
+        }
+    }
 };
 
 const update_animation: (animation: Animation, dt: number) => void = (animation, dt) => {
@@ -66,6 +107,16 @@ const draw_animation: (x: number, y: number, animation: Animation) => void = (x,
     }
 };
 
+//  *INPUT  //
+
+const key_pressed: (id: number) => boolean = (id) => {
+    return btnp(id, 30, 30);
+}
+
+const get_input: () => InputState = () => ({
+    up: btn(0), down: btn(1), left: btn(2), right: btn(3), a: key_pressed(4), b: key_pressed(5), x: key_pressed(6), y: key_pressed(7)
+});
+
 //  *ENTITY //
 const entity: (x: number, y: number, components: any) => any = (x = 0, y = 0, components = {}) => ({
     x,
@@ -76,6 +127,7 @@ const entity: (x: number, y: number, components: any) => any = (x = 0, y = 0, co
 //  *GLOBALS    //
 let t: number = 0;
 let delta: number = 0;
+let input: InputState;
 
 const state: any = {};
 
@@ -85,12 +137,14 @@ const init: () => void = () => {
         direction: null,
         animation: create_animation('pc', 90, 2, 2)
     });
-    add_animation_state(guy.animation, 'idle', [256]);
     add_animation_state(guy.animation, 'walking_x', [258, 256, 260, 256]);
     add_animation_state(guy.animation, 'walking_down', [264, 262, 266, 262]);
     add_animation_state(guy.animation, 'walking_up', [270, 268, 288, 268]);
-    play_animation(guy.animation, 'idle');
+    play_animation(guy.animation, 'walking_x');
     state.guy = guy;
+
+    //Test palette switch
+    state.palette = 'default';
 };
 
 init();
@@ -99,42 +153,60 @@ function TIC() {
     delta = (nt - t) / 1000;
     t = nt;
 
+    input = get_input();
+
     const guy = state.guy;
     const prev_guy_direction = guy.direction;
     //Input
-    if (btn(0)) {
-        guy.direction = 'up';
-        guy.y--;
-    } if (btn(1)) {
-        guy.direction = 'down';
-        guy.y++;
-    } if (btn(2)) {
-        guy.direction = 'left';
-        guy.x--;
-    } if (btn(3)) {
-        guy.direction = 'right';
-        guy.x++;
+
+    //Movement
+    const moving: boolean = input.up || input.down || input.left || input.right;
+    if (moving) {
+        if (input.up) {
+            guy.y--;
+            guy.direction = 'up';
+        }
+        if (input.down) {
+            guy.y++;
+            guy.direction = 'down';
+        }
+        if (input.left) {
+            guy.x--;
+            guy.direction = 'left';
+        }
+        if (input.right) {
+            guy.x++;
+            guy.direction = 'right';
+        }
     } else {
-        //play_animation(guy.animation, "idle");
+        guy.direction = 'none';
+    }
+
+
+    if (input.a) {
+        state.palette = switch_palette(state.palette);
     }
 
     if (guy.direction !== prev_guy_direction) {
         switch (guy.direction) {
             case 'left':
                 guy.animation.effects.flip = 1;
-                play_animation(guy.animation, "walking_x");
+                play_animation(guy.animation, 'walking_x');
                 break;
             case 'right':
                 guy.animation.effects.flip = 0;
-                play_animation(guy.animation, "walking_x");
+                play_animation(guy.animation, 'walking_x');
                 break;
             case 'down':
                 guy.animation.effects.flip = 0;
-                play_animation(guy.animation, "walking_down");
+                play_animation(guy.animation, 'walking_down');
                 break;
             case 'up':
                 guy.animation.effects.flip = 0;
-                play_animation(guy.animation, "walking_up");
+                play_animation(guy.animation, 'walking_up');
+                break;
+            default:
+                stop_animation(guy.animation, 1);
                 break;
         }
     }
@@ -148,7 +220,7 @@ function TIC() {
 
     draw_animation(guy.x, guy.y, guy.animation);
 
-    const word: string = "Test";
+    const word: string = `Palette: ${state.palette.charAt(0).toUpperCase() + state.palette.substr(1)}`;
     const word_width: number = word.length * 6;
-    print(word, SCREEN_WIDTH / 2 - word_width / 2 - 1, 130, 15);
+    print(word, SCREEN_WIDTH / 2 - word_width / 2 - 1, 130, 2);
 }

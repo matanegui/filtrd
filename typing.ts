@@ -1,3 +1,14 @@
+declare interface InputState {
+    up: boolean;
+    down: boolean;
+    left: boolean;
+    right: boolean;
+    a: boolean;
+    b: boolean;
+    x: boolean;
+    y: boolean;
+}
+
 declare interface AnimationEffects {
     scale: number;
     flip: number;
