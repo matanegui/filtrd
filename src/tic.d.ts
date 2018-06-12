@@ -1,6 +1,6 @@
-declare function btn(id: number): void;
+declare function btn(id: number): boolean;
 
-declare function btnp(id: number, hold?: number, period?: number): void;
+declare function btnp(id: number, hold?: number, period?: number): boolean;
 
 declare function clip(x: number, y: number, w: number, h: number): void;
 
