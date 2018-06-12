@@ -8,44 +8,43 @@ const DEFAULT_PALETTE: string = 'dungeon';
 
 const handle_input: (input: InputState, state: any) => void = (input, state) => {
     const guy = state.guy;
-
     //Movement and animation
-    const moving: boolean = input.down.up || input.down.down || input.down.left || input.down.right;
+
+    const moving: boolean = is_down(input, 'UP') || is_down(input, 'DOWN') || is_down(input, 'LEFT') || is_down(input, 'RIGHT');
     if (moving) {
         const x: number = guy.x;
         const y: number = guy.y;
-        guy.x = input.down.left ? x - 1 : (input.down.right ? x + 1 : x);
-        guy.y = input.down.up ? y - 1 : (input.down.down ? y + 1 : y);
+        guy.x = is_down(input, 'LEFT') ? x - 1 : (is_down(input, 'RIGHT') ? x + 1 : x);
+        guy.y = is_down(input, 'UP') ? y - 1 : (is_down(input, 'DOWN') ? y + 1 : y);
 
         const direction_prev: Direction = guy.direction;
-        guy.direction = input.down.left ? Direction.LEFT : (input.down.right ? Direction.RIGHT : (input.down.up ? Direction.UP : (input.down.down ? Direction.DOWN : null)));
-        if (guy.direction !== direction_prev) {
-            switch (guy.direction) {
-                case Direction.LEFT:
-                    guy.animation.effects.flip = 1;
-                    play_animation(guy.animation, 'walking_x');
-                    break;
-                case Direction.RIGHT:
-                    guy.animation.effects.flip = 0;
-                    play_animation(guy.animation, 'walking_x');
-                    break;
-                case Direction.UP:
-                    guy.animation.effects.flip = 0;
-                    play_animation(guy.animation, 'walking_up');
-                    break;
-                case Direction.DOWN:
-                    guy.animation.effects.flip = 0;
-                    play_animation(guy.animation, 'walking_down');
-                    break;
-            }
+        guy.direction = is_down(input, 'LEFT') ? Direction.LEFT : (is_down(input, 'RIGHT') ? Direction.RIGHT : (is_down(input, 'UP') ? Direction.UP : (is_down(input, 'DOWN') ? Direction.DOWN : null)));
+        switch (guy.direction) {
+            case Direction.LEFT:
+                guy.animation.effects.flip = 1;
+                play_animation(guy.animation, 'walking_x');
+                break;
+            case Direction.RIGHT:
+                guy.animation.effects.flip = 0;
+                play_animation(guy.animation, 'walking_x');
+                break;
+            case Direction.UP:
+                guy.animation.effects.flip = 0;
+                play_animation(guy.animation, 'walking_up');
+                break;
+            case Direction.DOWN:
+                guy.animation.effects.flip = 0;
+                play_animation(guy.animation, 'walking_down');
+                break;
         }
     } else {
         stop_animation(guy.animation, 1);
     }
 
     // Palette switching
-    if (input.pressed.a) {
+    if (is_pressed(input, 'A')) {
         state.palette = switch_palette(state.palette);
+        play_animation(guy.animation, 'using_phone');
     }
 };
 
@@ -66,13 +65,16 @@ const state: any = {};
 
 //  *GAME LOOP //
 const init: () => void = () => {
+
     const guy: any = entity(100, 50, {
         direction: null,
         animation: create_animation('pc', 90, 2, 2)
     });
+
     add_animation_state(guy.animation, 'walking_x', [258, 256, 260, 256]);
     add_animation_state(guy.animation, 'walking_down', [264, 262, 266, 262]);
     add_animation_state(guy.animation, 'walking_up', [270, 268, 288, 268]);
+    add_animation_state(guy.animation, 'using_phone', [290]);
     play_animation(guy.animation, 'walking_x');
     state.guy = guy;
 

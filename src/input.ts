@@ -1,27 +1,29 @@
-declare interface ButtonState {
-    up: boolean;
-    down: boolean;
-    left: boolean;
-    right: boolean;
-    a: boolean;
-    b: boolean;
-    x: boolean;
-    y: boolean;
-}
-
 declare interface InputState {
-    down: ButtonState;
-    pressed: ButtonState;
+    down: string;
+    pressed: string;
 }
 
-const BUTTONS: string[] = ['up', 'down', 'left', 'right', 'a', 'b', 'x', 'y'];
+const BUTTONS: string[] = ['UP', 'DOWN', 'LEFT', 'RIGHT', 'A', 'B', 'X', 'Y'];
 
 const get_input: () => InputState = () => {
     const input_map = BUTTONS;
-    const input_state: any = { down: {}, pressed: {} };
+    const replaceAt: (original: string, index: number, replacement: string) => string = (original, index, replacement) => {
+        return original.substr(0, index) + replacement + original.substr(index + replacement.length);
+    };
+    const input_state: any = { down: '00000000', pressed: '00000000' };
     input_map.forEach((id, index) => {
-        input_state.down[id] = btn(index);
-        input_state.pressed[id] = btnp(index, Infinity, 30)
+        input_state.down = replaceAt(input_state.down, index, btn(index) ? '1' : '0');
+        input_state.pressed = replaceAt(input_state.pressed, index, btnp(index, Infinity, 30) ? '1' : '0');
     });
     return input_state as InputState;
+};
+
+const is_down: (input: InputState, id: string) => boolean = (input, id) => {
+    const key_index: number = BUTTONS.indexOf(id);
+    return (key_index !== -1) && input.down.charAt(key_index) === '1';
+};
+
+const is_pressed: (input: InputState, id: string) => boolean = (input, id) => {
+    const key_index: number = BUTTONS.indexOf(id);
+    return (key_index !== -1) && input.pressed.charAt(key_index) === '1';
 };
