@@ -12,11 +12,8 @@ const handle_input: (input: InputState, state: any) => void = (input, state) => 
 
     const moving: boolean = is_down(input, 'UP') || is_down(input, 'DOWN') || is_down(input, 'LEFT') || is_down(input, 'RIGHT');
     if (moving) {
-        const x: number = guy.x;
-        const y: number = guy.y;
-        guy.x = is_down(input, 'LEFT') ? x - 1 : (is_down(input, 'RIGHT') ? x + 1 : x);
-        guy.y = is_down(input, 'UP') ? y - 1 : (is_down(input, 'DOWN') ? y + 1 : y);
-
+        guy.movement.velocity_x = is_down(input, 'LEFT') ? -guy.movement.speed : (is_down(input, 'RIGHT') ? guy.movement.speed : 0);
+        guy.movement.velocity_y = is_down(input, 'UP') ? -guy.movement.speed : (is_down(input, 'DOWN') ? guy.movement.speed : 0);
         const direction_prev: Direction = guy.direction;
         guy.direction = is_down(input, 'LEFT') ? Direction.LEFT : (is_down(input, 'RIGHT') ? Direction.RIGHT : (is_down(input, 'UP') ? Direction.UP : (is_down(input, 'DOWN') ? Direction.DOWN : null)));
         switch (guy.direction) {
@@ -38,6 +35,8 @@ const handle_input: (input: InputState, state: any) => void = (input, state) => 
                 break;
         }
     } else {
+        guy.movement.velocity_x = 0;
+        guy.movement.velocity_y = 0;
         stop_animation(guy.animation, 1);
     }
 
@@ -68,6 +67,7 @@ const init: () => void = () => {
 
     const guy: any = entity(100, 50, {
         direction: null,
+        movement: { velocity_x: 0, velocity_y: 0, speed: 75 },
         animation: create_animation('pc', 90, 2, 2)
     });
 
@@ -98,6 +98,10 @@ function TIC() {
     //Logic
     const guy = state.guy;
     update_animation(guy.animation, delta);
+
+    //Update guys position
+    guy.x = guy.x + (guy.movement.velocity_x * delta);
+    guy.y = guy.y + (guy.movement.velocity_y * delta);
 
     //Draw
     cls(0);
