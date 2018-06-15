@@ -9,7 +9,6 @@ const DEFAULT_PALETTE: string = 'dungeon';
 const handle_input: (input: InputState, state: any) => void = (input, state) => {
     const guy = state.guy;
     //Movement and animation
-
     const moving: boolean = is_down(input, 'UP') || is_down(input, 'DOWN') || is_down(input, 'LEFT') || is_down(input, 'RIGHT');
     if (moving) {
         guy.movement.velocity_x = is_down(input, 'LEFT') ? -guy.movement.speed : (is_down(input, 'RIGHT') ? guy.movement.speed : 0);
@@ -67,7 +66,7 @@ const init: () => void = () => {
 
     const guy: any = entity(100, 50, {
         direction: null,
-        movement: { velocity_x: 0, velocity_y: 0, speed: 75 },
+        movement: { velocity_x: 0, velocity_y: 0, speed: 60 },
         animation: create_animation('pc', 90, 2, 2)
     });
 
