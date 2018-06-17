@@ -44,9 +44,12 @@ const add_animation_state: (animation: Animation, state: string, frames: number[
 
 const play_animation: (animation: Animation, state: string) => void = (animation, state) => {
     if (state in ANIMATIONS[animation.id]) {
+        const state_changed: boolean = animation.state !== state;
         animation.playing = true;
-        animation.state = state;
-        animation.frame = ANIMATIONS[animation.id][animation.state][0];
+        if (state_changed) {
+            animation.state = state;
+            animation.frame = ANIMATIONS[animation.id][animation.state][0];
+        }
     } else {
         trace(`Tried playing invalid state: ${state} in animation id: ${animation.id}`);
     }
@@ -55,7 +58,8 @@ const play_animation: (animation: Animation, state: string) => void = (animation
 const stop_animation: (animation: Animation, stop_frame?: number) => void = (animation, stop_frame) => {
     animation.playing = false;
     if (stop_frame) {
-        const frame: number = ANIMATIONS[animation.id][animation.state][stop_frame];
+        const frames: number[] = ANIMATIONS[animation.id][animation.state];
+        const frame: number = frames[stop_frame] || frames[0];
         if (frame) {
             animation.timestamp = 0;
             animation.frame_index = 0;
