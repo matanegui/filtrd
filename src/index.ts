@@ -10,6 +10,11 @@ const entity: (x: number, y: number, components: any) => any = (x = 0, y = 0, co
     ...components
 });
 
+// Utils
+const isPointInRect = (x, y, rx, ry, rw, rh) => {
+    return x >= rx && x < rx + rw && y >= ry && y < ry + rh
+}
+
 //  *GLOBALS    //
 let t: number = 0;
 let delta: number = 0;
@@ -35,6 +40,8 @@ const init: () => void = () => {
 
     //Test palette switch
     state.palette = DEFAULT_PALETTE;
+
+    trace(get_tile_properties(223, 81).solid);
 };
 
 function TIC() {
@@ -55,13 +62,18 @@ function TIC() {
     update_animation(guy.animation, delta);
 
     //Update guys position
-    guy.x = guy.x + (guy.movement.velocity_x * delta);
-    guy.y = guy.y + (guy.movement.velocity_y * delta);
+    const mx = guy.x + (guy.movement.velocity_x * delta);
+    const my = guy.y + (guy.movement.velocity_y * delta);
+    const w = guy.movement.velocity_x > 0 ? 16 : 0;
+    const h = guy.movement.velocity_y > 0 ? 16 : 0;
+    if (!get_tile_properties(mx + w, my + h).solid) {
+        guy.x = mx;
+        guy.y = my;
+    }
 
     //Draw
     cls(0);
     draw_map();
-    //trace(get_tile(8, 8));
 
     draw_animation(guy.x, guy.y, guy.animation);
 
