@@ -25,11 +25,12 @@ const init: () => void = () => {
         animation: create_animation('pc', 90, 2, 2)
     });
 
-    add_animation_state(guy.animation, 'walking_x', [258, 256, 260, 256]);
-    add_animation_state(guy.animation, 'walking_down', [264, 262, 266, 262]);
-    add_animation_state(guy.animation, 'walking_up', [270, 268, 288, 268]);
-    add_animation_state(guy.animation, 'using_phone', [290]);
-    play_animation(guy.animation, 'walking_x');
+    const { animation } = guy;
+    add_animation_state(animation, 'w_x', [258, 256, 260, 256]);
+    add_animation_state(animation, 'w_down', [264, 262, 266, 262]);
+    add_animation_state(animation, 'w_up', [270, 268, 288, 268]);
+    add_animation_state(animation, 'u_phone', [290]);
+    play_animation(animation, 'w_x');
     state.guy = guy;
 
     //Test palette switch

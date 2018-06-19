@@ -50,8 +50,6 @@ const play_animation: (animation: Animation, state: string) => void = (animation
             animation.state = state;
             animation.frame = ANIMATIONS[animation.id][animation.state][0];
         }
-    } else {
-        trace(`Tried playing invalid state: ${state} in animation id: ${animation.id}`);
     }
 };
 
@@ -64,8 +62,6 @@ const stop_animation: (animation: Animation, stop_frame?: number) => void = (ani
             animation.timestamp = 0;
             animation.frame_index = 0;
             animation.frame = frame;
-        } else {
-            trace(`Tried to played invalid frame: ${frame} on animation stop.`);
         }
     }
 };
@@ -82,8 +78,6 @@ const update_animation: (animation: Animation, dt: number) => void = (animation,
                 animation.frame_index = animation.frame_index < frames.length - 1 ? animation.frame_index + 1 : 0;
                 animation.frame = frames[animation.frame_index];
             }
-        } else {
-            trace(`Tried updating invalid state: ${animation.state} in animation id: ${animation.id}`);
         }
     }
 };
@@ -93,7 +87,5 @@ const draw_animation: (x: number, y: number, animation: Animation) => void = (x,
     if (frames) {
         const effects: AnimationEffects = animation.effects;
         spr(animation.frame, x, y, 0, effects.scale, effects.flip, effects.rotate, animation.width, animation.height);
-    } else {
-        trace(`Tried drawing invalid state: ${animation.state} in animation id: ${animation.id}`);
     }
 };

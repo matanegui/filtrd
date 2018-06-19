@@ -34,40 +34,37 @@ enum Direction { UP, DOWN, LEFT, RIGHT };
 
 const handle_input: (input: InputState, state: any) => void = (input, state) => {
     const guy = state.guy;
+    const { animation, movement } = guy;
     //Movement and animation
     const moving: boolean = is_down(input, Button.UP) || is_down(input, Button.DOWN) || is_down(input, Button.LEFT) || is_down(input, Button.RIGHT);
     if (moving) {
-        guy.movement.velocity_x = is_down(input, Button.LEFT) ? -guy.movement.speed : (is_down(input, Button.RIGHT) ? guy.movement.speed : 0);
-        guy.movement.velocity_y = is_down(input, Button.UP) ? -guy.movement.speed : (is_down(input, Button.DOWN) ? guy.movement.speed : 0);
-        const direction_prev: Direction = guy.movement.direction;
-        guy.movement.direction = is_down(input, Button.LEFT) ? Direction.LEFT : (is_down(input, Button.RIGHT) ? Direction.RIGHT : (is_down(input, Button.UP) ? Direction.UP : (is_down(input, Button.DOWN) ? Direction.DOWN : null)));
-        switch (guy.movement.direction) {
-            case Direction.LEFT:
-                guy.animation.effects.flip = 1;
-                play_animation(guy.animation, 'walking_x');
-                break;
-            case Direction.RIGHT:
-                guy.animation.effects.flip = 0;
-                play_animation(guy.animation, 'walking_x');
-                break;
-            case Direction.UP:
-                guy.animation.effects.flip = 0;
-                play_animation(guy.animation, 'walking_up');
-                break;
-            case Direction.DOWN:
-                guy.animation.effects.flip = 0;
-                play_animation(guy.animation, 'walking_down');
-                break;
+        movement.velocity_x = is_down(input, Button.LEFT) ? -movement.speed : (is_down(input, Button.RIGHT) ? movement.speed : 0);
+        movement.velocity_y = is_down(input, Button.UP) ? -movement.speed : (is_down(input, Button.DOWN) ? movement.speed : 0);
+        const direction_prev: Direction = movement.direction;
+        movement.direction = is_down(input, Button.LEFT) ? Direction.LEFT : (is_down(input, Button.RIGHT) ? Direction.RIGHT : (is_down(input, Button.UP) ? Direction.UP : (is_down(input, Button.DOWN) ? Direction.DOWN : null)));
+        const { direction } = movement;
+        if (direction === Direction.LEFT) {
+            animation.effects.flip = 1;
+            play_animation(animation, 'w_x');
+        } else if (direction === Direction.RIGHT) {
+            animation.effects.flip = 0;
+            play_animation(animation, 'w_x');
+        } else if (direction === Direction.UP) {
+            animation.effects.flip = 0;
+            play_animation(animation, 'w_up');
+        } else if (direction === Direction.DOWN) {
+            animation.effects.flip = 0;
+            play_animation(animation, 'w_down');
         }
     } else {
-        guy.movement.velocity_x = 0;
-        guy.movement.velocity_y = 0;
-        stop_animation(guy.animation, 1);
+        movement.velocity_x = 0;
+        movement.velocity_y = 0;
+        stop_animation(animation, 1);
     }
 
     // Palette switching
     if (is_pressed(input, Button.A)) {
         state.palette = switch_palette(state.palette);
-        play_animation(guy.animation, 'using_phone');
+        play_animation(animation, 'u_phone');
     }
 };
