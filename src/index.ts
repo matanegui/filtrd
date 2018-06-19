@@ -1,51 +1,7 @@
-//  *ENUMS   //
-enum Direction { UP, DOWN, LEFT, RIGHT };
-
 //  *CONSTANTS  //
 const SCREEN_WIDTH: number = 240;
 const SCREEN_HEIGHT: number = 136;
 const DEFAULT_PALETTE: string = 'dungeon';
-
-const handle_input: (input: InputState, state: any) => void = (input, state) => {
-    const guy = state.guy;
-    //Movement and animation
-    const moving: boolean = is_down(input, 'UP') || is_down(input, 'DOWN') || is_down(input, 'LEFT') || is_down(input, 'RIGHT');
-    if (moving) {
-        guy.movement.velocity_x = is_down(input, 'LEFT') ? -guy.movement.speed : (is_down(input, 'RIGHT') ? guy.movement.speed : 0);
-        guy.movement.velocity_y = is_down(input, 'UP') ? -guy.movement.speed : (is_down(input, 'DOWN') ? guy.movement.speed : 0);
-        const direction_prev: Direction = guy.direction;
-        guy.direction = is_down(input, 'LEFT') ? Direction.LEFT : (is_down(input, 'RIGHT') ? Direction.RIGHT : (is_down(input, 'UP') ? Direction.UP : (is_down(input, 'DOWN') ? Direction.DOWN : null)));
-        switch (guy.direction) {
-            case Direction.LEFT:
-                guy.animation.effects.flip = 1;
-                play_animation(guy.animation, 'walking_x');
-                break;
-            case Direction.RIGHT:
-                guy.animation.effects.flip = 0;
-                play_animation(guy.animation, 'walking_x');
-                break;
-            case Direction.UP:
-                guy.animation.effects.flip = 0;
-                play_animation(guy.animation, 'walking_up');
-                break;
-            case Direction.DOWN:
-                guy.animation.effects.flip = 0;
-                play_animation(guy.animation, 'walking_down');
-                break;
-        }
-    } else {
-        guy.movement.velocity_x = 0;
-        guy.movement.velocity_y = 0;
-        stop_animation(guy.animation, 1);
-    }
-
-    // Palette switching
-    if (is_pressed(input, 'A')) {
-        state.palette = switch_palette(state.palette);
-        play_animation(guy.animation, 'using_phone');
-    }
-};
-
 
 //  *ENTITY //
 const entity: (x: number, y: number, components: any) => any = (x = 0, y = 0, components = {}) => ({
@@ -65,8 +21,7 @@ const state: any = {};
 const init: () => void = () => {
 
     const guy: any = entity(100, 50, {
-        direction: null,
-        movement: { velocity_x: 0, velocity_y: 0, speed: 60 },
+        movement: { direction: null, speed: 60 },
         animation: create_animation('pc', 90, 2, 2)
     });
 
@@ -104,7 +59,8 @@ function TIC() {
 
     //Draw
     cls(0);
-    map(0, 0, 32, 18, 0, 0);
+    draw_map();
+    //trace(get_tile(8, 8));
 
     draw_animation(guy.x, guy.y, guy.animation);
 
