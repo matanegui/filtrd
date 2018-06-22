@@ -38,11 +38,17 @@ const handle_input: (input: InputState, state: any) => void = (input, state) => 
     //Movement and animation
     const moving: boolean = is_down(input, Button.UP) || is_down(input, Button.DOWN) || is_down(input, Button.LEFT) || is_down(input, Button.RIGHT);
     if (moving) {
-        movement.velocity_x = is_down(input, Button.LEFT) ? -movement.speed : (is_down(input, Button.RIGHT) ? movement.speed : 0);
-        movement.velocity_y = is_down(input, Button.UP) ? -movement.speed : (is_down(input, Button.DOWN) ? movement.speed : 0);
+        //Set facing direction
+        movement.moving = true;
         const direction_prev: Direction = movement.direction;
         movement.direction = is_down(input, Button.LEFT) ? Direction.LEFT : (is_down(input, Button.RIGHT) ? Direction.RIGHT : (is_down(input, Button.UP) ? Direction.UP : (is_down(input, Button.DOWN) ? Direction.DOWN : null)));
         const { direction } = movement;
+
+        //Set velocity
+        movement.velocity_x = is_down(input, Button.LEFT) ? -movement.speed : (is_down(input, Button.RIGHT) ? movement.speed : 0);
+        movement.velocity_y = is_down(input, Button.UP) ? -movement.speed : (is_down(input, Button.DOWN) ? movement.speed : 0);
+
+        //Animate
         if (direction === Direction.LEFT) {
             animation.effects.flip = 1;
             play_animation(animation, 'w_x');
@@ -59,6 +65,7 @@ const handle_input: (input: InputState, state: any) => void = (input, state) => 
     } else {
         movement.velocity_x = 0;
         movement.velocity_y = 0;
+        movement.moving = false;
         stop_animation(animation, 1);
     }
 

@@ -15,6 +15,12 @@ const isPointInRect = (x, y, rx, ry, rw, rh) => {
     return x >= rx && x < rx + rw && y >= ry && y < ry + rh
 }
 
+const are_colliding: (ax: number, ay: number, aw: number, ah: number, bx: number, by: number, bw: number, bh: number) => boolean = (ax, ay, aw, ah, bx, by, bw, bh) => {
+    if (ax + aw < bx || ax > bx + bw) return false;
+    if (ay + ah < by || ay > by + bh) return false;
+    return true;
+}
+
 //  *GLOBALS    //
 let t: number = 0;
 let delta: number = 0;
@@ -26,7 +32,7 @@ const state: any = {};
 const init: () => void = () => {
 
     const guy: any = entity(100, 50, {
-        movement: { direction: null, speed: 60 },
+        movement: { direction: null, speed: 60, moving: false },
         animation: create_animation('pc', 90, 2, 2)
     });
 
@@ -40,8 +46,6 @@ const init: () => void = () => {
 
     //Test palette switch
     state.palette = DEFAULT_PALETTE;
-
-    trace(get_tile_properties(223, 81).solid);
 };
 
 function TIC() {
@@ -62,13 +66,17 @@ function TIC() {
     update_animation(guy.animation, delta);
 
     //Update guys position
-    const mx = guy.x + (guy.movement.velocity_x * delta);
-    const my = guy.y + (guy.movement.velocity_y * delta);
-    const w = guy.movement.velocity_x > 0 ? 16 : 0;
-    const h = guy.movement.velocity_y > 0 ? 16 : 0;
-    if (!get_tile_properties(mx + w, my + h).solid) {
-        guy.x = mx;
-        guy.y = my;
+    if (guy.movement.moving) {
+        const mx = guy.x + (guy.movement.velocity_x * delta);
+        const my = guy.y + (guy.movement.velocity_y * delta);
+        const w = guy.movement.velocity_x > 0 ? 16 : 0;
+        const h = guy.movement.velocity_y > 0 ? 16 : 0;
+        const tile: any = get_tile(mx + w + 1, my + h + 1);
+        const is_colliding: boolean = tile.flags.solid;
+        if (!is_colliding) {
+            guy.x = mx;
+            guy.y = my;
+        }
     }
 
     //Draw
