@@ -33,5 +33,7 @@ const get_tile: (x: number, y: number) => any = (x, y) => {
         flags.solid = flag_string.charAt(0) === '1';
     }
     tile.flags = flags;
+    tile.pos = { x: Math.floor((x - MAP_X) / BASE_TILE_SIZE) * BASE_TILE_SIZE, y: Math.floor((x - MAP_X) / BASE_TILE_SIZE) * BASE_TILE_SIZE, w: 8, h: 8 };
+
     return tile;
 }

@@ -33,8 +33,8 @@ const is_pressed: (input: InputState, id: number) => boolean = (input, id) => {
 enum Direction { UP, DOWN, LEFT, RIGHT };
 
 const handle_input: (input: InputState, state: any) => void = (input, state) => {
-    const guy = state.guy;
-    const { animation, movement } = guy;
+    const pc = state.pc;
+    const { animation, movement } = pc;
     //Movement and animation
     const moving: boolean = is_down(input, Button.UP) || is_down(input, Button.DOWN) || is_down(input, Button.LEFT) || is_down(input, Button.RIGHT);
     if (moving) {

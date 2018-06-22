@@ -31,18 +31,18 @@ const state: any = {};
 //  *GAME LOOP //
 const init: () => void = () => {
 
-    const guy: any = entity(100, 50, {
+    const pc: any = entity(100, 50, {
         movement: { direction: null, speed: 60, moving: false },
         animation: create_animation('pc', 90, 2, 2)
     });
 
-    const { animation } = guy;
+    const { animation } = pc;
     add_animation_state(animation, 'w_x', [258, 256, 260, 256]);
     add_animation_state(animation, 'w_down', [264, 262, 266, 262]);
     add_animation_state(animation, 'w_up', [270, 268, 288, 268]);
     add_animation_state(animation, 'u_phone', [290]);
     play_animation(animation, 'w_x');
-    state.guy = guy;
+    state.pc = pc;
 
     //Test palette switch
     state.palette = DEFAULT_PALETTE;
@@ -62,20 +62,22 @@ function TIC() {
     handle_input(input, state);
 
     //Logic
-    const guy = state.guy;
-    update_animation(guy.animation, delta);
-
-    //Update guys position
-    if (guy.movement.moving) {
-        const mx = guy.x + (guy.movement.velocity_x * delta);
-        const my = guy.y + (guy.movement.velocity_y * delta);
-        const w = guy.movement.velocity_x > 0 ? 16 : 0;
-        const h = guy.movement.velocity_y > 0 ? 16 : 0;
-        const tile: any = get_tile(mx + w + 1, my + h + 1);
-        const is_colliding: boolean = tile.flags.solid;
+    const pc = state.pc;
+    update_animation(pc.animation, delta);
+    const hrect = { x: 0, y: 0, w: 8, h: 8 };
+    //Update pcs position
+    if (pc.movement.moving) {
+        const mx = pc.x + (pc.movement.velocity_x * delta);
+        const my = pc.y + (pc.movement.velocity_y * delta);
+        const w = pc.movement.velocity_x > 0 ? 16 : 0;
+        const h = pc.movement.velocity_y > 0 ? 16 : 0;
+        //2 tile barrier
+        const tile1: any = get_tile(mx + w, my + h);
+        const tile2: any = get_tile(mx + w, my + h + 8);
+        const is_colliding: boolean = tile1.flags.solid || tile2.flags.solid;
         if (!is_colliding) {
-            guy.x = mx;
-            guy.y = my;
+            pc.x = mx;
+            pc.y = my;
         }
     }
 
@@ -83,8 +85,10 @@ function TIC() {
     cls(0);
     draw_map();
 
-    draw_animation(guy.x, guy.y, guy.animation);
+    draw_animation(pc.x, pc.y, pc.animation);
 
     const word: string = `${state.palette.charAt(0).toUpperCase() + state.palette.substr(1)}`;
     print(word, 2, 130, 2);
+
+    rectb(hrect.x, hrect.y, hrect.w, hrect.h, 15);
 }
