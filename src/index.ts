@@ -33,6 +33,7 @@ const init: () => void = () => {
 
     const pc: any = entity(100, 50, {
         movement: { direction: null, speed: 60, moving: false },
+        collision: { enabled: true, box: { x: 3, y: 1, w: 10, h: 14 } },
         animation: create_animation('pc', 90, 2, 2)
     });
 
@@ -64,17 +65,16 @@ function TIC() {
     //Logic
     const pc = state.pc;
     update_animation(pc.animation, delta);
-    const hrect = { x: 0, y: 0, w: 8, h: 8 };
+
     //Update pcs position
     if (pc.movement.moving) {
+        //Calculate new poisition
         const mx = pc.x + (pc.movement.velocity_x * delta);
         const my = pc.y + (pc.movement.velocity_y * delta);
-        const w = pc.movement.velocity_x > 0 ? 16 : 0;
-        const h = pc.movement.velocity_y > 0 ? 16 : 0;
-        //2 tile barrier
-        const tile1: any = get_tile(mx + w, my + h);
-        const tile2: any = get_tile(mx + w, my + h + 8);
-        const is_colliding: boolean = tile1.flags.solid || tile2.flags.solid;
+        // Check for tilemap collision
+        const pc_box = pc.collision.box;
+        const tiles: any[] = get_tiles_in_rect(mx + pc_box.x, my + pc_box.y, pc_box.w, pc_box.h);
+        const is_colliding: boolean = tiles.some((tile: any) => tile.flags.solid);
         if (!is_colliding) {
             pc.x = mx;
             pc.y = my;
@@ -89,6 +89,4 @@ function TIC() {
 
     const word: string = `${state.palette.charAt(0).toUpperCase() + state.palette.substr(1)}`;
     print(word, 2, 130, 2);
-
-    rectb(hrect.x, hrect.y, hrect.w, hrect.h, 15);
 }
