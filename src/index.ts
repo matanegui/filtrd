@@ -1,51 +1,7 @@
-//  *ENUMS   //
-enum Direction { UP, DOWN, LEFT, RIGHT };
-
 //  *CONSTANTS  //
 const SCREEN_WIDTH: number = 240;
 const SCREEN_HEIGHT: number = 136;
 const DEFAULT_PALETTE: string = 'dungeon';
-
-const handle_input: (input: InputState, state: any) => void = (input, state) => {
-    const guy = state.guy;
-    //Movement and animation
-    const moving: boolean = is_down(input, 'UP') || is_down(input, 'DOWN') || is_down(input, 'LEFT') || is_down(input, 'RIGHT');
-    if (moving) {
-        guy.movement.velocity_x = is_down(input, 'LEFT') ? -guy.movement.speed : (is_down(input, 'RIGHT') ? guy.movement.speed : 0);
-        guy.movement.velocity_y = is_down(input, 'UP') ? -guy.movement.speed : (is_down(input, 'DOWN') ? guy.movement.speed : 0);
-        const direction_prev: Direction = guy.direction;
-        guy.direction = is_down(input, 'LEFT') ? Direction.LEFT : (is_down(input, 'RIGHT') ? Direction.RIGHT : (is_down(input, 'UP') ? Direction.UP : (is_down(input, 'DOWN') ? Direction.DOWN : null)));
-        switch (guy.direction) {
-            case Direction.LEFT:
-                guy.animation.effects.flip = 1;
-                play_animation(guy.animation, 'walking_x');
-                break;
-            case Direction.RIGHT:
-                guy.animation.effects.flip = 0;
-                play_animation(guy.animation, 'walking_x');
-                break;
-            case Direction.UP:
-                guy.animation.effects.flip = 0;
-                play_animation(guy.animation, 'walking_up');
-                break;
-            case Direction.DOWN:
-                guy.animation.effects.flip = 0;
-                play_animation(guy.animation, 'walking_down');
-                break;
-        }
-    } else {
-        guy.movement.velocity_x = 0;
-        guy.movement.velocity_y = 0;
-        stop_animation(guy.animation, 1);
-    }
-
-    // Palette switching
-    if (is_pressed(input, 'A')) {
-        state.palette = switch_palette(state.palette);
-        play_animation(guy.animation, 'using_phone');
-    }
-};
-
 
 //  *ENTITY //
 const entity: (x: number, y: number, components: any) => any = (x = 0, y = 0, components = {}) => ({
@@ -53,6 +9,17 @@ const entity: (x: number, y: number, components: any) => any = (x = 0, y = 0, co
     y,
     ...components
 });
+
+// Utils
+const isPointInRect = (x, y, rx, ry, rw, rh) => {
+    return x >= rx && x < rx + rw && y >= ry && y < ry + rh
+}
+
+const are_colliding: (ax: number, ay: number, aw: number, ah: number, bx: number, by: number, bw: number, bh: number) => boolean = (ax, ay, aw, ah, bx, by, bw, bh) => {
+    if (ax + aw < bx || ax > bx + bw) return false;
+    if (ay + ah < by || ay > by + bh) return false;
+    return true;
+}
 
 //  *GLOBALS    //
 let t: number = 0;
@@ -64,18 +31,19 @@ const state: any = {};
 //  *GAME LOOP //
 const init: () => void = () => {
 
-    const guy: any = entity(100, 50, {
-        direction: null,
-        movement: { velocity_x: 0, velocity_y: 0, speed: 60 },
+    const pc: any = entity(100, 50, {
+        movement: { direction: null, speed: 60, moving: false },
+        collision: { enabled: true, box: { x: 3, y: 1, w: 10, h: 14 } },
         animation: create_animation('pc', 90, 2, 2)
     });
 
-    add_animation_state(guy.animation, 'walking_x', [258, 256, 260, 256]);
-    add_animation_state(guy.animation, 'walking_down', [264, 262, 266, 262]);
-    add_animation_state(guy.animation, 'walking_up', [270, 268, 288, 268]);
-    add_animation_state(guy.animation, 'using_phone', [290]);
-    play_animation(guy.animation, 'walking_x');
-    state.guy = guy;
+    const { animation } = pc;
+    add_animation_state(animation, 'w_x', [258, 256, 260, 256]);
+    add_animation_state(animation, 'w_down', [264, 262, 266, 262]);
+    add_animation_state(animation, 'w_up', [270, 268, 288, 268]);
+    add_animation_state(animation, 'u_phone', [290]);
+    play_animation(animation, 'w_x');
+    state.pc = pc;
 
     //Test palette switch
     state.palette = DEFAULT_PALETTE;
@@ -95,18 +63,29 @@ function TIC() {
     handle_input(input, state);
 
     //Logic
-    const guy = state.guy;
-    update_animation(guy.animation, delta);
+    const pc = state.pc;
+    update_animation(pc.animation, delta);
 
-    //Update guys position
-    guy.x = guy.x + (guy.movement.velocity_x * delta);
-    guy.y = guy.y + (guy.movement.velocity_y * delta);
+    //Update pcs position
+    if (pc.movement.moving) {
+        //Calculate new poisition
+        const mx = pc.x + (pc.movement.velocity_x * delta);
+        const my = pc.y + (pc.movement.velocity_y * delta);
+        // Check for tilemap collision
+        const pc_box = pc.collision.box;
+        const tiles: any[] = get_tiles_in_rect(mx + pc_box.x, my + pc_box.y, pc_box.w, pc_box.h);
+        const is_colliding: boolean = tiles.some((tile: any) => tile.flags.solid);
+        if (!is_colliding) {
+            pc.x = mx;
+            pc.y = my;
+        }
+    }
 
     //Draw
     cls(0);
-    map(0, 0, 32, 18, 0, 0);
+    draw_map();
 
-    draw_animation(guy.x, guy.y, guy.animation);
+    draw_animation(pc.x, pc.y, pc.animation);
 
     const word: string = `${state.palette.charAt(0).toUpperCase() + state.palette.substr(1)}`;
     print(word, 2, 130, 2);

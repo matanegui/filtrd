@@ -13,3 +13,6 @@ All filter definitions so I can save them somewhere else:
 
 ## Ideas
 - *Palette switching* can actually be the game's objective. Switch palettes to get game objects (props, enemies, player movement) differently.
+
+# WIP
+Collission when walking: jsut a funciton in the `map` that you give a rect to and returns a list of all tiles in that rect, check for collision on any of those
