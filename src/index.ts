@@ -86,6 +86,7 @@ function TIC() {
     draw_map();
 
     draw_animation(pc.x, pc.y, pc.animation);
+    spr(292, 120, 80, 0, 1, 0, 0, 2, 2);
 
     const word: string = `${state.palette.charAt(0).toUpperCase() + state.palette.substr(1)}`;
     print(word, 2, 130, 2);
