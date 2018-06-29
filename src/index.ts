@@ -31,7 +31,7 @@ const state: any = {};
 //  *GAME LOOP //
 const init: () => void = () => {
 
-    const pc: any = entity(100, 50, {
+    const pc: any = entity(32, 100, {
         movement: { direction: null, speed: 60, moving: false },
         collision: { enabled: true, box: { x: 3, y: 1, w: 10, h: 14 } },
         animation: create_animation('pc', 90, 2, 2)
@@ -58,6 +58,8 @@ function TIC() {
     delta = (nt - t) / 1000;
     t = nt;
 
+    const map_timestamp = 0;
+
     // Input
     input = get_input();
     handle_input(input, state);
@@ -74,7 +76,9 @@ function TIC() {
         // Check for tilemap collision
         const pc_box = pc.collision.box;
         const tiles: any[] = get_tiles_in_rect(mx + pc_box.x, my + pc_box.y, pc_box.w, pc_box.h);
-        const is_colliding: boolean = tiles.some((tile: any) => tile.flags.solid);
+        const is_colliding: boolean = tiles.some((tile: any) => {
+            return tile.flags.solid || (tile.flags.freezing_walkable && state.palette !== 'chill')
+        });
         if (!is_colliding) {
             pc.x = mx;
             pc.y = my;
@@ -83,10 +87,9 @@ function TIC() {
 
     //Draw
     cls(0);
-    draw_map();
+    draw_map((tile) => tile);
 
     draw_animation(pc.x, pc.y, pc.animation);
-    spr(292, 120, 80, 0, 1, 0, 0, 2, 2);
 
     const word: string = `${state.palette.charAt(0).toUpperCase() + state.palette.substr(1)}`;
     print(word, 2, 130, 2);
