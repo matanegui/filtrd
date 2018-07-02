@@ -45,6 +45,15 @@ const init: () => void = () => {
     play_animation(animation, 'w_x');
     state.pc = pc;
 
+    //Load map
+    state.map = create_tilemap(0,0,32,18);
+    //Flag strings: '[solid][freezing_walkable]'
+    for (let i = 2; i <= 15; i++) {
+        add_tile(state.map, i, '10');
+        add_tile(state.map, 16+i, '10');
+    }
+    add_tile(state.map, 36, '01');
+
     //Test palette switch
     state.palette = DEFAULT_PALETTE;
 };
@@ -75,7 +84,7 @@ function TIC() {
         const my = pc.y + (pc.movement.velocity_y * delta);
         // Check for tilemap collision
         const pc_box = pc.collision.box;
-        const tiles: any[] = get_tiles_in_rect(mx + pc_box.x, my + pc_box.y, pc_box.w, pc_box.h);
+        const tiles: any[] = get_tiles_in_rect(state.map, mx + pc_box.x, my + pc_box.y, pc_box.w, pc_box.h);
         const is_colliding: boolean = tiles.some((tile: any) => {
             return tile.flags.solid || (tile.flags.freezing_walkable && state.palette !== 'chill')
         });
@@ -87,7 +96,7 @@ function TIC() {
 
     //Draw
     cls(0);
-    draw_map((tile) => {
+    draw_map(state.map, (tile) => {
         //Water tiles become frozen
         if (state.palette === 'chill'){
             if ([36,37, 52, 53].indexOf(tile) !== -1){
