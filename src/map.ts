@@ -11,10 +11,7 @@ for (let i = 2; i <= 15; i++) {
     TILES[i] = { id: i, flag_string: '10' };
     TILES[16 + i] = { id: 16 + i, flag_string: '10' };
 }
-for (let i = 0; i < 2; i++) {
-    TILES[36 + i] = { id: 42 + i, flag_string: '01' };
-    TILES[52 + i] = { id: 58 + i, flag_string: '01' };
-}
+    TILES[36] = { id: 36, flag_string: '01' };
 
 const draw_map: (remap: any) => void = (remap) => {
     map(MAP_X, MAP_Y, MAP_WIDTH, MAP_HEIGHT, 0, 0, 0, 1, remap);

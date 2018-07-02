@@ -33,7 +33,7 @@ const init: () => void = () => {
 
     const pc: any = entity(32, 100, {
         movement: { direction: null, speed: 60, moving: false },
-        collision: { enabled: true, box: { x: 3, y: 1, w: 10, h: 14 } },
+        collision: { enabled: true, box: { x: 3, y: 1, w: 10, h: 15 } },
         animation: create_animation('pc', 90, 2, 2)
     });
 
@@ -87,7 +87,15 @@ function TIC() {
 
     //Draw
     cls(0);
-    draw_map((tile) => tile);
+    draw_map((tile) => {
+        //Water tiles become frozen
+        if (state.palette === 'chill'){
+            if ([36,37, 52, 53].indexOf(tile) !== -1){
+                return tile+2;
+            }
+        }
+        return tile;
+    });
 
     draw_animation(pc.x, pc.y, pc.animation);
 
