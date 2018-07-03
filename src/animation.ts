@@ -4,7 +4,7 @@ declare interface AnimationEffects {
     rotate: number;
 }
 
-declare interface Animation {
+declare interface AnimationData {
     id: string;
     speed: number;
     width: number;
@@ -21,7 +21,7 @@ declare interface Animation {
 const ANIMATIONS: any = {};
 
 //  *ANIMATION  //
-const create_animation: (id: string, speed: number, width: number, height: number) => Animation = (id, speed = 0, width = 1, height = 1) => {
+const create_animation: (id: string, speed: number, width: number, height: number) => AnimationData = (id, speed = 0, width = 1, height = 1) => {
     ANIMATIONS[id] = {};
     return {
         id,
@@ -34,15 +34,19 @@ const create_animation: (id: string, speed: number, width: number, height: numbe
         timestamp: 0,
         frame: 0,
         state: null,
-        effects: { scale: 1, flip: 0, rotate: 0 }
+        effects: {
+            scale: 1,
+            flip: 0,
+            rotate: 0
+        }
     }
 };
 
-const add_animation_state: (animation: Animation, state: string, frames: number[]) => void = (animation, state, frames) => {
+const add_animation_state: (animation: AnimationData, state: string, frames: number[]) => void = (animation, state, frames) => {
     ANIMATIONS[animation.id][state] = frames;
 };
 
-const play_animation: (animation: Animation, state: string) => void = (animation, state) => {
+const play_animation: (animation: AnimationData, state: string) => void = (animation, state) => {
     if (state in ANIMATIONS[animation.id]) {
         const state_changed: boolean = animation.state !== state;
         animation.playing = true;
@@ -53,7 +57,7 @@ const play_animation: (animation: Animation, state: string) => void = (animation
     }
 };
 
-const stop_animation: (animation: Animation, stop_frame?: number) => void = (animation, stop_frame) => {
+const stop_animation: (animation: AnimationData, stop_frame?: number) => void = (animation, stop_frame) => {
     animation.playing = false;
     if (stop_frame) {
         const frames: number[] = ANIMATIONS[animation.id][animation.state];
@@ -66,7 +70,7 @@ const stop_animation: (animation: Animation, stop_frame?: number) => void = (ani
     }
 };
 
-const update_animation: (animation: Animation, dt: number) => void = (animation, dt) => {
+const update_animation: (animation: AnimationData, dt: number) => void = (animation, dt) => {
     if (animation.playing) {
         const frames = ANIMATIONS[animation.id][animation.state];
         if (frames) {
@@ -82,7 +86,7 @@ const update_animation: (animation: Animation, dt: number) => void = (animation,
     }
 };
 
-const draw_animation: (x: number, y: number, animation: Animation) => void = (x, y, animation) => {
+const draw_animation: (x: number, y: number, animation: AnimationData) => void = (x, y, animation) => {
     const frames: number[] = ANIMATIONS[animation.id][animation.state];
     if (frames) {
         const effects: AnimationEffects = animation.effects;

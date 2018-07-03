@@ -46,13 +46,12 @@ const init: () => void = () => {
     state.pc = pc;
 
     //Load map
-    state.map = create_tilemap(0,0,32,18);
-    //Flag strings: '[solid][freezing_walkable]'
+    state.map = create_tilemap(0, 0, 32, 18);
     for (let i = 2; i <= 15; i++) {
-        add_tile(state.map, i, '10');
-        add_tile(state.map, 16+i, '10');
+        add_tile_data(state.map, i, ['solid']);
+        add_tile_data(state.map, 16 + i, ['solid']);
     }
-    add_tile(state.map, 36, '01');
+    add_tile_data(state.map, 36, ['freezing_walkable']);
 
     //Test palette switch
     state.palette = DEFAULT_PALETTE;
@@ -98,9 +97,9 @@ function TIC() {
     cls(0);
     draw_map(state.map, (tile) => {
         //Water tiles become frozen
-        if (state.palette === 'chill'){
-            if ([36,37, 52, 53].indexOf(tile) !== -1){
-                return tile+2;
+        if (state.palette === 'chill') {
+            if ([36, 37, 52, 53].indexOf(tile) !== -1) {
+                return tile + 2;
             }
         }
         return tile;
