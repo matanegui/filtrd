@@ -30,7 +30,6 @@ const is_pressed: (input: InputState, id: number) => boolean = (input, id) => {
 };
 
 //Handle input function
-enum Direction { UP, DOWN, LEFT, RIGHT };
 
 const handle_input: (input: InputState, state: any) => void = (input, state) => {
     const pc = state.pc;

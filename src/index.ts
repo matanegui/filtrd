@@ -3,13 +3,6 @@ const SCREEN_WIDTH: number = 240;
 const SCREEN_HEIGHT: number = 136;
 const DEFAULT_PALETTE: string = 'dungeon';
 
-//  *ENTITY //
-const entity: (x: number, y: number, components: any) => any = (x = 0, y = 0, components = {}) => ({
-    x,
-    y,
-    ...components
-});
-
 // Utils
 const isPointInRect = (x, y, rx, ry, rw, rh) => {
     return x >= rx && x < rx + rw && y >= ry && y < ry + rh
@@ -31,7 +24,7 @@ const state: any = {};
 //  *GAME LOOP //
 const init: () => void = () => {
 
-    const pc: any = entity(32, 100, {
+    const pc: Entity = entity(32, 96, {
         movement: { direction: null, speed: 60, moving: false },
         collision: { enabled: true, box: { x: 3, y: 1, w: 10, h: 15 } },
         animation: create_animation('pc', 90, 2, 2)
@@ -95,14 +88,14 @@ function TIC() {
 
     //Draw
     cls(0);
-    draw_map(state.map, (tile) => {
+    draw_map(state.map, (tile_id: number) => {
         //Water tiles become frozen
         if (state.palette === 'chill') {
-            if ([36, 37, 52, 53].indexOf(tile) !== -1) {
-                return tile + 2;
+            if ([36, 37, 52, 53].indexOf(tile_id) !== -1) {
+                return tile_id + 2;
             }
         }
-        return tile;
+        return tile_id;
     });
 
     draw_animation(pc.x, pc.y, pc.animation);
