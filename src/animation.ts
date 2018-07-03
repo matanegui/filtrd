@@ -90,6 +90,6 @@ const draw_animation: (x: number, y: number, animation: AnimationData) => void =
     const frames: number[] = ANIMATIONS[animation.id][animation.state];
     if (frames) {
         const effects: AnimationEffects = animation.effects;
-        spr(animation.frame, x, y, 0, effects.scale, effects.flip, effects.rotate, animation.width, animation.height);
+        spr(animation.frame, x, y, 14, effects.scale, effects.flip, effects.rotate, animation.width, animation.height);
     }
 };

@@ -54,5 +54,5 @@ const get_tiles_in_rect: (tilemap: any, x: number, y: number, w: number, h: numb
 }
 
 const draw_map: (tilemap: any, remap: any) => void = (tilemap, remap) => {
-    map(tilemap.x, tilemap.y, tilemap.width, tilemap.height, 0, 0, 0, 1, remap);
+    map(tilemap.x, tilemap.y, tilemap.width, tilemap.height, 0, 0, 14, 1, remap);
 };

@@ -41,10 +41,10 @@ const init: () => void = () => {
     //Load map
     state.map = create_tilemap(0, 0, 32, 18);
     for (let i = 2; i <= 15; i++) {
-        add_tile_data(state.map, i, ['solid']);
-        add_tile_data(state.map, 16 + i, ['solid']);
+        add_tile_data(state.map, i, [TileFlags.SOLID]);
+        add_tile_data(state.map, 16 + i, [TileFlags.SOLID]);
     }
-    add_tile_data(state.map, 36, ['freezing_walkable']);
+    add_tile_data(state.map, 36, [TileFlags.FREEZING_WALKABLE]);
 
     //Test palette switch
     state.palette = DEFAULT_PALETTE;
@@ -78,7 +78,7 @@ function TIC() {
         const pc_box = pc.collision.box;
         const tiles: any[] = get_tiles_in_rect(state.map, mx + pc_box.x, my + pc_box.y, pc_box.w, pc_box.h);
         const is_colliding: boolean = tiles.some((tile: any) => {
-            return tile.flags.solid || (tile.flags.freezing_walkable && state.palette !== 'chill')
+            return tile.flags[TileFlags.SOLID] || (tile.flags[TileFlags.FREEZING_WALKABLE] && state.palette !== 'chill')
         });
         if (!is_colliding) {
             pc.x = mx;
