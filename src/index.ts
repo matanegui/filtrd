@@ -27,7 +27,7 @@ const init: () => void = () => {
     const pc: Entity = entity(32, 96);
 
     pc.sprite = create_sprite(265, { w: 2, h: 2 });
-    pc.animation = create_animation('pc', 90, 2, 2);
+    pc.animation = create_animation('pc', 90);
     pc.movement = { direction: null, speed: 60, moving: false };
     pc.collision = { enabled: true, box: { x: 3, y: 1, w: 10, h: 15 } };
 
@@ -59,7 +59,6 @@ const handle_input: (input: InputState, state: any) => void = (input, state) => 
     if (moving) {
         //Set facing direction
         movement.moving = true;
-        const direction_prev: Direction = movement.direction;
         movement.direction = is_down(input, Button.LEFT) ? Direction.LEFT : (is_down(input, Button.RIGHT) ? Direction.RIGHT : (is_down(input, Button.UP) ? Direction.UP : (is_down(input, Button.DOWN) ? Direction.DOWN : null)));
         const { direction } = movement;
 
@@ -100,7 +99,6 @@ function TIC() {
         init();
     }
 
-
     const nt: number = time();
     delta = (nt - t) / 1000;
     t = nt;
@@ -108,7 +106,6 @@ function TIC() {
     // Input
     input = get_input();
     handle_input(input, state);
-
     //Logic
     const pc = state.pc;
     update_animation(pc.animation, delta);
