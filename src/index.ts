@@ -36,6 +36,7 @@ const init: () => void = () => {
     add_animation_state(animation, 'w_down', [264, 262, 266, 262]);
     add_animation_state(animation, 'w_up', [270, 268, 288, 268]);
     add_animation_state(animation, 'u_phone', [290]);
+    add_animation_state(animation, 'drowning', [292, 294, 296, 298, 300, 302]);
     play_animation(animation, 'w_x');
     state.pc = pc;
 
