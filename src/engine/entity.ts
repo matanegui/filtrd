@@ -22,14 +22,23 @@ interface Components {
 interface Entity {
     x: number;
     y: number;
+    sprite: Sprite;
     //Components
     animation?: AnimationData;
-    movement?: Movement
-    collision?: Collision
+    movement?: Movement;
+    collision?: Collision;
 }
 
-const entity: (x: number, y: number, components: Components) => Entity = (x = 0, y = 0, components = {}) => ({
+const entity: (x: number, y: number) => Entity = (x = 0, y = 0) => ({
     x,
     y,
-    ...components
+    sprite: create_sprite(0, {})
 });
+
+const draw_entity: (e: Entity) => void = (e) => {
+    let { id, w, h, scale, flip, rotate, colorkey } = e.sprite;
+    if (e.animation) {
+        id = e.animation.frame;
+    }
+    spr(id, e.x, e.y, colorkey, scale, flip, rotate, w, h);
+}

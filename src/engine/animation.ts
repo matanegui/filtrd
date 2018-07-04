@@ -1,9 +1,3 @@
-declare interface AnimationEffects {
-    scale: number;
-    flip: number;
-    rotate: number;
-}
-
 declare interface AnimationData {
     id: string;
     speed: number;
@@ -15,7 +9,6 @@ declare interface AnimationData {
     timestamp: number;
     frame: number;
     state: string;
-    effects: AnimationEffects
 }
 
 const ANIMATIONS: any = {};
@@ -33,12 +26,7 @@ const create_animation: (id: string, speed: number, width: number, height: numbe
         frame_index: 0,
         timestamp: 0,
         frame: 0,
-        state: null,
-        effects: {
-            scale: 1,
-            flip: 0,
-            rotate: 0
-        }
+        state: null
     }
 };
 
@@ -83,13 +71,5 @@ const update_animation: (animation: AnimationData, dt: number) => void = (animat
                 animation.frame = frames[animation.frame_index];
             }
         }
-    }
-};
-
-const draw_animation: (x: number, y: number, animation: AnimationData) => void = (x, y, animation) => {
-    const frames: number[] = ANIMATIONS[animation.id][animation.state];
-    if (frames) {
-        const effects: AnimationEffects = animation.effects;
-        spr(animation.frame, x, y, 14, effects.scale, effects.flip, effects.rotate, animation.width, animation.height);
     }
 };

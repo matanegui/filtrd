@@ -24,11 +24,12 @@ const state: any = {};
 //  *GAME LOOP //
 const init: () => void = () => {
 
-    const pc: Entity = entity(32, 96, {
-        movement: { direction: null, speed: 60, moving: false },
-        collision: { enabled: true, box: { x: 3, y: 1, w: 10, h: 15 } },
-        animation: create_animation('pc', 90, 2, 2)
-    });
+    const pc: Entity = entity(32, 96);
+
+    pc.sprite = create_sprite(265, { w: 2, h: 2 });
+    pc.animation = create_animation('pc', 90, 2, 2);
+    pc.movement = { direction: null, speed: 60, moving: false };
+    pc.collision = { enabled: true, box: { x: 3, y: 1, w: 10, h: 15 } };
 
     const { animation } = pc;
     add_animation_state(animation, 'w_x', [258, 256, 260, 256]);
@@ -50,16 +51,59 @@ const init: () => void = () => {
     state.palette = DEFAULT_PALETTE;
 };
 
+const handle_input: (input: InputState, state: any) => void = (input, state) => {
+    const pc = state.pc;
+    const { sprite, animation, movement } = pc;
+    //Movement and animation
+    const moving: boolean = is_down(input, Button.UP) || is_down(input, Button.DOWN) || is_down(input, Button.LEFT) || is_down(input, Button.RIGHT);
+    if (moving) {
+        //Set facing direction
+        movement.moving = true;
+        const direction_prev: Direction = movement.direction;
+        movement.direction = is_down(input, Button.LEFT) ? Direction.LEFT : (is_down(input, Button.RIGHT) ? Direction.RIGHT : (is_down(input, Button.UP) ? Direction.UP : (is_down(input, Button.DOWN) ? Direction.DOWN : null)));
+        const { direction } = movement;
+
+        //Set velocity
+        movement.velocity_x = is_down(input, Button.LEFT) ? -movement.speed : (is_down(input, Button.RIGHT) ? movement.speed : 0);
+        movement.velocity_y = is_down(input, Button.UP) ? -movement.speed : (is_down(input, Button.DOWN) ? movement.speed : 0);
+
+        //Animate
+        if (direction === Direction.LEFT) {
+            sprite.flip = 1;
+            play_animation(animation, 'w_x');
+        } else if (direction === Direction.RIGHT) {
+            sprite.flip = 0;
+            play_animation(animation, 'w_x');
+        } else if (direction === Direction.UP) {
+            sprite.flip = 0;
+            play_animation(animation, 'w_up');
+        } else if (direction === Direction.DOWN) {
+            sprite.flip = 0;
+            play_animation(animation, 'w_down');
+        }
+    } else {
+        movement.velocity_x = 0;
+        movement.velocity_y = 0;
+        movement.moving = false;
+        stop_animation(animation, 1);
+    }
+
+    // Palette switching
+    if (is_pressed(input, Button.A)) {
+        state.palette = switch_palette(state.palette);
+        play_animation(animation, 'u_phone');
+    }
+};
+
 function TIC() {
     if (t === 0) {
         init();
     }
 
+
     const nt: number = time();
     delta = (nt - t) / 1000;
     t = nt;
-
-    const map_timestamp = 0;
 
     // Input
     input = get_input();
@@ -98,7 +142,7 @@ function TIC() {
         return tile_id;
     });
 
-    draw_animation(pc.x, pc.y, pc.animation);
+    draw_entity(pc);
 
     const word: string = `${state.palette.charAt(0).toUpperCase() + state.palette.substr(1)}`;
     print(word, 2, 130, 2);
