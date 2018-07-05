@@ -29,14 +29,14 @@ const init: () => void = () => {
     pc.sprite = create_sprite(265, { w: 2, h: 2 });
     pc.animation = create_animation('pc', 90);
     pc.movement = { direction: null, speed: 60, moving: false };
-    pc.collision = { enabled: true, box: { x: 3, y: 1, w: 10, h: 15 } };
+    pc.collision = { enabled: true, body_box: { x: 3, y: 1, w: 10, h: 15 }, stand_box: { x: 0, y: 10, w: 16, h: 6 } };
 
     const { animation } = pc;
     add_animation_state(animation, 'w_x', [258, 256, 260, 256]);
     add_animation_state(animation, 'w_down', [264, 262, 266, 262]);
     add_animation_state(animation, 'w_up', [270, 268, 288, 268]);
     add_animation_state(animation, 'u_phone', [290]);
-    add_animation_state(animation, 'drowning', [292, 294, 296, 298, 300, 302]);
+    add_animation_state(animation, 'drown', [292, 294, 296, 298, 300, 302]);
     play_animation(animation, 'w_x');
     state.pc = pc;
 
@@ -96,6 +96,8 @@ const handle_input: (input: InputState, state: any) => void = (input, state) => 
 };
 
 function TIC() {
+
+    /* -------------------- INIT -------------------- */
     if (t === 0) {
         init();
     }
@@ -104,21 +106,24 @@ function TIC() {
     delta = (nt - t) / 1000;
     t = nt;
 
-    // Input
+    /* -------------------- INPUT -------------------- */
+
     input = get_input();
     handle_input(input, state);
-    //Logic
+
+    /* -------------------- LOGIC -------------------- */
     const pc = state.pc;
-    update_animation(pc.animation, delta);
+    const { movement, animation, collision } = pc;
+    update_animation(animation, delta);
 
     //Update pcs position
-    if (pc.movement.moving) {
+    if (movement.moving) {
         //Calculate new poisition
-        const mx = pc.x + (pc.movement.velocity_x * delta);
-        const my = pc.y + (pc.movement.velocity_y * delta);
+        const mx = pc.x + (movement.velocity_x * delta);
+        const my = pc.y + (movement.velocity_y * delta);
         // Check for tilemap collision
-        const pc_box = pc.collision.box;
-        const tiles: any[] = get_tiles_in_rect(state.map, mx + pc_box.x, my + pc_box.y, pc_box.w, pc_box.h);
+        const box = collision.full_box;
+        const tiles: any[] = get_tiles_in_rect(state.map, mx + box.x, my + box.y, box.w, box.h);
         const is_colliding: boolean = tiles.some((tile: any) => {
             return tile.flags[TileFlags.SOLID] || (tile.flags[TileFlags.FREEZING_WALKABLE] && state.palette !== 'chill')
         });
@@ -128,7 +133,16 @@ function TIC() {
         }
     }
 
-    //Draw
+    //Check drowning colission
+    const box = collision.stand_box;
+    const feet_tiles: any[] = get_tiles_in_rect(state.map, pc.x + box.x, pc.y + box.y, box.w, box.h);
+    const is_drowning: boolean = feet_tiles.some((tile: any) => tile.flags[TileFlags.FREEZING_WALKABLE] && state.palette !== 'chill');
+    if (is_drowning) {
+        trace('drown!!!');
+        play_animation(pc.animation, 'drown');
+    }
+
+    /* -------------------- DRAW -------------------- */
     cls(0);
     draw_map(state.map, (tile_id: number) => {
         //Water tiles become frozen

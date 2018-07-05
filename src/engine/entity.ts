@@ -10,7 +10,8 @@ interface Movement {
 
 interface Collision {
     enabled: boolean;
-    box: { x: number, y: number, w: number, h: number };
+    body_box: { x: number, y: number, w: number, h: number };
+    stand_box?: { x: number, y: number, w: number, h: number };
 }
 
 interface Components {
