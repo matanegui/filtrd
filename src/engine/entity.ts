@@ -20,19 +20,29 @@ interface Components {
     collision?: Collision
 }
 
+interface EntityFlags {
+    dead: boolean;
+}
+
 interface Entity {
     x: number;
     y: number;
     sprite: Sprite;
+    flags: EntityFlags;
     //Components
     animation?: AnimationData;
     movement?: Movement;
     collision?: Collision;
 }
 
+const create_entity_flags: () => EntityFlags = () => ({
+    dead: false
+})
+
 const entity: (x: number, y: number) => Entity = (x = 0, y = 0) => ({
     x,
     y,
+    flags: create_entity_flags(),
     sprite: create_sprite(0, {})
 });
 

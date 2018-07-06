@@ -19,26 +19,21 @@ let t: number = 0;
 let delta: number = 0;
 let input: InputState;
 
-const state: any = {};
+const state: {
+    map?: any,
+    pc?: Entity,
+    palette?: string,
+    timers?: {
+        pc_dead: number
+    }
+} = {};
 
 //  *GAME LOOP //
 const init: () => void = () => {
 
-    const pc: Entity = entity(32, 96);
+    state.timers = { pc_dead: 0 };
 
-    pc.sprite = create_sprite(265, { w: 2, h: 2 });
-    pc.animation = create_animation('pc', 90);
-    pc.movement = { direction: null, speed: 60, moving: false };
-    pc.collision = { enabled: true, body_box: { x: 3, y: 1, w: 10, h: 15 }, stand_box: { x: 0, y: 10, w: 16, h: 6 } };
-
-    const { animation } = pc;
-    add_animation_state(animation, 'w_x', [258, 256, 260, 256]);
-    add_animation_state(animation, 'w_down', [264, 262, 266, 262]);
-    add_animation_state(animation, 'w_up', [270, 268, 288, 268]);
-    add_animation_state(animation, 'u_phone', [290]);
-    add_animation_state(animation, 'drown', [292, 294, 296, 298, 300, 302]);
-    play_animation(animation, 'w_x');
-    state.pc = pc;
+    state.pc = create_pc(32, 96);
 
     //Load map
     state.map = create_tilemap(0, 0, 32, 18);
@@ -55,44 +50,7 @@ const init: () => void = () => {
 const handle_input: (input: InputState, state: any) => void = (input, state) => {
     const pc = state.pc;
     const { sprite, animation, movement } = pc;
-    //Movement and animation
-    const moving: boolean = is_down(input, Button.UP) || is_down(input, Button.DOWN) || is_down(input, Button.LEFT) || is_down(input, Button.RIGHT);
-    if (moving) {
-        //Set facing direction
-        movement.moving = true;
-        movement.direction = is_down(input, Button.LEFT) ? Direction.LEFT : (is_down(input, Button.RIGHT) ? Direction.RIGHT : (is_down(input, Button.UP) ? Direction.UP : (is_down(input, Button.DOWN) ? Direction.DOWN : null)));
-        const { direction } = movement;
 
-        //Set velocity
-        movement.velocity_x = is_down(input, Button.LEFT) ? -movement.speed : (is_down(input, Button.RIGHT) ? movement.speed : 0);
-        movement.velocity_y = is_down(input, Button.UP) ? -movement.speed : (is_down(input, Button.DOWN) ? movement.speed : 0);
-
-        //Animate
-        if (direction === Direction.LEFT) {
-            sprite.flip = 1;
-            play_animation(animation, 'w_x');
-        } else if (direction === Direction.RIGHT) {
-            sprite.flip = 0;
-            play_animation(animation, 'w_x');
-        } else if (direction === Direction.UP) {
-            sprite.flip = 0;
-            play_animation(animation, 'w_up');
-        } else if (direction === Direction.DOWN) {
-            sprite.flip = 0;
-            play_animation(animation, 'w_down');
-        }
-    } else {
-        movement.velocity_x = 0;
-        movement.velocity_y = 0;
-        movement.moving = false;
-        stop_animation(animation, 1);
-    }
-
-    // Palette switching
-    if (is_pressed(input, Button.A)) {
-        state.palette = switch_palette(state.palette);
-        play_animation(animation, 'u_phone');
-    }
 };
 
 function TIC() {
@@ -102,45 +60,100 @@ function TIC() {
         init();
     }
 
+    /* -------------------- TIMER UPDATES -------------------- */
+
     const nt: number = time();
     delta = (nt - t) / 1000;
     t = nt;
 
     /* -------------------- INPUT -------------------- */
 
-    input = get_input();
-    handle_input(input, state);
-
-    /* -------------------- LOGIC -------------------- */
     const pc = state.pc;
-    const { movement, animation, collision } = pc;
-    update_animation(animation, delta);
+    const { sprite, movement, animation, collision, flags } = pc;
 
-    //Update pcs position
-    if (movement.moving) {
-        //Calculate new poisition
-        const mx = pc.x + (movement.velocity_x * delta);
-        const my = pc.y + (movement.velocity_y * delta);
-        // Check for tilemap collision
-        const box = collision.full_box;
-        const tiles: any[] = get_tiles_in_rect(state.map, mx + box.x, my + box.y, box.w, box.h);
-        const is_colliding: boolean = tiles.some((tile: any) => {
-            return tile.flags[TileFlags.SOLID] || (tile.flags[TileFlags.FREEZING_WALKABLE] && state.palette !== 'chill')
-        });
-        if (!is_colliding) {
-            pc.x = mx;
-            pc.y = my;
+    input = get_input();
+    if (!flags.dead) {
+        //Movement and animation
+        const moving: boolean = is_down(input, Button.UP) || is_down(input, Button.DOWN) || is_down(input, Button.LEFT) || is_down(input, Button.RIGHT);
+        if (moving) {
+            //Set facing direction
+            movement.moving = true;
+            movement.direction = is_down(input, Button.LEFT) ? Direction.LEFT : (is_down(input, Button.RIGHT) ? Direction.RIGHT : (is_down(input, Button.UP) ? Direction.UP : (is_down(input, Button.DOWN) ? Direction.DOWN : null)));
+            const { direction } = movement;
+
+            //Set velocity
+            movement.velocity_x = is_down(input, Button.LEFT) ? -movement.speed : (is_down(input, Button.RIGHT) ? movement.speed : 0);
+            movement.velocity_y = is_down(input, Button.UP) ? -movement.speed : (is_down(input, Button.DOWN) ? movement.speed : 0);
+
+            //Animate
+            if (direction === Direction.LEFT) {
+                sprite.flip = 1;
+                play_animation(animation, 'w_x');
+            } else if (direction === Direction.RIGHT) {
+                sprite.flip = 0;
+                play_animation(animation, 'w_x');
+            } else if (direction === Direction.UP) {
+                sprite.flip = 0;
+                play_animation(animation, 'w_up');
+            } else if (direction === Direction.DOWN) {
+                sprite.flip = 0;
+                play_animation(animation, 'w_down');
+            }
+        } else {
+            movement.velocity_x = 0;
+            movement.velocity_y = 0;
+            movement.moving = false;
+            stop_animation(animation, 1);
+        }
+
+        // Palette switching
+        if (is_pressed(input, Button.A)) {
+            state.palette = switch_palette(state.palette);
+            play_animation(animation, 'u_phone');
+        }
+
+        /* -------------------- LOGIC -------------------- */
+
+        //Update pcs position
+        if (movement.moving) {
+            //Calculate new poisition
+            const mx = pc.x + (movement.velocity_x * delta);
+            const my = pc.y + (movement.velocity_y * delta);
+            // Check for tilemap collision
+            const box = collision.body_box;
+            const tiles: any[] = get_tiles_in_rect(state.map, mx + box.x, my + box.y, box.w, box.h);
+            const is_colliding: boolean = tiles.some((tile: any) => {
+                return tile.flags[TileFlags.SOLID] || (tile.flags[TileFlags.FREEZING_WALKABLE] && state.palette !== 'chill')
+            });
+            if (!is_colliding) {
+                pc.x = mx;
+                pc.y = my;
+            }
+        }
+
+        //Check drowning colission
+        const box = collision.stand_box;
+        const feet_tiles: any[] = get_tiles_in_rect(state.map, pc.x + box.x, pc.y + box.y, box.w, box.h);
+        const is_drowning: boolean = feet_tiles.some((tile: any) => tile.flags[TileFlags.FREEZING_WALKABLE] && state.palette !== 'chill');
+        if (is_drowning) {
+            // Kill PC
+            pc.flags.dead = true;
+            sfx(63, 48, 98);
+            play_animation(pc.animation, 'drown', false);
+        }
+    } else {
+        // Reset level
+        state.timers.pc_dead += delta;
+        if (state.timers.pc_dead > 1.7) {
+            state.timers.pc_dead = 0;
+            state.palette = swap_palette('dungeon');
+            pc.flags.dead = false;
+            state.pc = create_pc(32, 96);
         }
     }
 
-    //Check drowning colission
-    const box = collision.stand_box;
-    const feet_tiles: any[] = get_tiles_in_rect(state.map, pc.x + box.x, pc.y + box.y, box.w, box.h);
-    const is_drowning: boolean = feet_tiles.some((tile: any) => tile.flags[TileFlags.FREEZING_WALKABLE] && state.palette !== 'chill');
-    if (is_drowning) {
-        trace('drown!!!');
-        play_animation(pc.animation, 'drown');
-    }
+    update_animation(animation, delta);
+
 
     /* -------------------- DRAW -------------------- */
     cls(0);

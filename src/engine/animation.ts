@@ -30,7 +30,8 @@ const add_animation_state: (animation: AnimationData, state: string, frames: num
     animation.frames[state] = frames;
 };
 
-const play_animation: (animation: AnimationData, state: string) => void = (animation, state) => {
+const play_animation: (animation: AnimationData, state: string, loop?: boolean, on_finish?: () => void) => void = (animation, state, loop = true) => {
+    animation.loop = loop;
     if (state in animation.frames) {
         const state_changed: boolean = animation.current_state !== state;
         animation.playing = true;
@@ -63,7 +64,7 @@ const update_animation: (animation: AnimationData, dt: number) => void = (animat
                 animation.timestamp += dt;
             } else {
                 animation.timestamp = 0;
-                animation.frame_index = animation.frame_index < frames.length - 1 ? animation.frame_index + 1 : 0;
+                animation.frame_index = (animation.frame_index < frames.length - 1) ? animation.frame_index + 1 : (animation.loop ? 0 : animation.frame_index);
                 animation.frame = frames[animation.frame_index];
             }
         }
