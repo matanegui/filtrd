@@ -1,7 +1,7 @@
 //  *CONSTANTS  //
 const SCREEN_WIDTH: number = 240;
 const SCREEN_HEIGHT: number = 136;
-const DEFAULT_PALETTE: string = 'dungeon';
+const DEFAULT_PALETTE: Palettes = Palettes.Dungeon;
 
 // Utils
 const isPointInRect = (x, y, rx, ry, rw, rh) => {
@@ -47,12 +47,6 @@ const init: () => void = () => {
     state.palette = DEFAULT_PALETTE;
 };
 
-const handle_input: (input: InputState, state: any) => void = (input, state) => {
-    const pc = state.pc;
-    const { sprite, animation, movement } = pc;
-
-};
-
 function TIC() {
 
     /* -------------------- INIT -------------------- */
@@ -67,7 +61,6 @@ function TIC() {
     t = nt;
 
     /* -------------------- INPUT -------------------- */
-
     const pc = state.pc;
     const { sprite, movement, animation, collision, flags } = pc;
 
@@ -88,16 +81,16 @@ function TIC() {
             //Animate
             if (direction === Direction.LEFT) {
                 sprite.flip = 1;
-                play_animation(animation, 'w_x');
+                play_animation(animation, PcAnimations.WalkingSide);
             } else if (direction === Direction.RIGHT) {
                 sprite.flip = 0;
-                play_animation(animation, 'w_x');
+                play_animation(animation, PcAnimations.WalkingSide);
             } else if (direction === Direction.UP) {
                 sprite.flip = 0;
-                play_animation(animation, 'w_up');
+                play_animation(animation, PcAnimations.WalkingUp);
             } else if (direction === Direction.DOWN) {
                 sprite.flip = 0;
-                play_animation(animation, 'w_down');
+                play_animation(animation, PcAnimations.WalkingDown);
             }
         } else {
             movement.velocity_x = 0;
@@ -109,11 +102,12 @@ function TIC() {
         // Palette switching
         if (is_pressed(input, Button.A)) {
             state.palette = switch_palette(state.palette);
-            play_animation(animation, 'u_phone');
+            play_animation(animation, PcAnimations.UsingPhone);
         }
+    }
 
-        /* -------------------- LOGIC -------------------- */
-
+    /* -------------------- LOGIC -------------------- */
+    if (!flags.dead) {
         //Update pcs position
         if (movement.moving) {
             //Calculate new poisition
@@ -123,7 +117,7 @@ function TIC() {
             const box = collision.body_box;
             const tiles: any[] = get_tiles_in_rect(state.map, mx + box.x, my + box.y, box.w, box.h);
             const is_colliding: boolean = tiles.some((tile: any) => {
-                return tile.flags[TileFlags.SOLID] || (tile.flags[TileFlags.FREEZING_WALKABLE] && state.palette !== 'chill')
+                return tile.flags[TileFlags.SOLID] || (tile.flags[TileFlags.FREEZING_WALKABLE] && state.palette !== Palettes.Chill)
             });
             if (!is_colliding) {
                 pc.x = mx;
@@ -134,19 +128,19 @@ function TIC() {
         //Check drowning colission
         const box = collision.stand_box;
         const feet_tiles: any[] = get_tiles_in_rect(state.map, pc.x + box.x, pc.y + box.y, box.w, box.h);
-        const is_drowning: boolean = feet_tiles.some((tile: any) => tile.flags[TileFlags.FREEZING_WALKABLE] && state.palette !== 'chill');
+        const is_drowning: boolean = feet_tiles.some((tile: any) => tile.flags[TileFlags.FREEZING_WALKABLE] && state.palette !== Palettes.Chill);
         if (is_drowning) {
             // Kill PC
             pc.flags.dead = true;
             sfx(63, 48, 98);
-            play_animation(pc.animation, 'drown', false);
+            play_animation(pc.animation, PcAnimations.Drowning, false);
         }
     } else {
         // Reset level
         state.timers.pc_dead += delta;
         if (state.timers.pc_dead > 1.7) {
             state.timers.pc_dead = 0;
-            state.palette = swap_palette('dungeon');
+            state.palette = swap_palette(Palettes.Dungeon);
             pc.flags.dead = false;
             state.pc = create_pc(32, 96);
         }
@@ -159,7 +153,7 @@ function TIC() {
     cls(0);
     draw_map(state.map, (tile_id: number) => {
         //Water tiles become frozen
-        if (state.palette === 'chill') {
+        if (state.palette === Palettes.Chill) {
             if ([36, 37, 52, 53].indexOf(tile_id) !== -1) {
                 return tile_id + 2;
             }
