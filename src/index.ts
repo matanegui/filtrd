@@ -22,17 +22,17 @@ let input: InputState;
 const state: {
     map?: any,
     pc?: Entity,
+    particles?: any[],
     palette?: string,
     timers?: {
         pc_dead: number
     }
 } = {};
 
-//  *GAME LOOP //
 const init: () => void = () => {
 
     state.timers = { pc_dead: 0 };
-
+    state.particles = [];
     state.pc = create_pc(32, 96);
 
     //Load map
@@ -45,6 +45,13 @@ const init: () => void = () => {
 
     //Test palette switch
     state.palette = DEFAULT_PALETTE;
+
+    //Test particles
+    const on_bubble_death: any = () => {
+        state.particles.filter((system: any) => system.id !== test_part.id);
+    };
+    const test_part: any = create_particles(120, 40, 'bubbles', on_bubble_death);
+    state.particles.push(test_part);
 };
 
 function TIC() {
@@ -162,6 +169,11 @@ function TIC() {
     });
 
     draw_entity(pc);
+
+    //Particle test
+    state.particles.forEach((system: any) => {
+        draw_particles(system, delta);
+    });
 
     const word: string = `${state.palette.charAt(0).toUpperCase() + state.palette.substr(1)}`;
     print(word, 2, 130, 2);
