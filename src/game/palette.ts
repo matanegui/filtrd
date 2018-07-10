@@ -1,9 +1,14 @@
+const enum Palettes {
+    Dungeon = 'dungeon',
+    Chill = 'chill',
+    Roast = 'roast'
+}
+
 // format: dark, primary, light, complement //
 const PALETTES: any = {
-    dungeon: [[32, 29, 36], [103, 89, 122], [207, 232, 173], [230, 85, 125]],
-    chill: [[2, 28, 39], [18, 57, 165], [214, 234, 241], [2, 128, 144]],
-    roast: [[42, 3, 1], [145, 23, 31], [245, 203, 92], [245, 63, 28]]
-    //roast: [[42, 3, 1], [145, 23, 31], [227, 192, 211], [245, 203, 92]]
+    [Palettes.Dungeon]: [[32, 29, 36], [103, 89, 122], [207, 232, 173], [230, 85, 125]],
+    [Palettes.Chill]: [[2, 28, 39], [18, 57, 165], [214, 234, 241], [2, 128, 144]],
+    [Palettes.Roast]: [[42, 3, 1], [145, 23, 31], [245, 203, 92], [245, 63, 28]]
 };
 
 //  *PALETTE  //
@@ -11,11 +16,10 @@ const switch_palette: (current_palette: string) => string = (current_palette) =>
     const palette_ids: string[] = Object.keys(PALETTES);
     const current_palette_index = palette_ids.indexOf(current_palette);
     const new_palette_id = current_palette_index + 1 < palette_ids.length ? palette_ids[current_palette_index + 1] : palette_ids[0];
-    swap_palette(new_palette_id);
-    return new_palette_id;
+    return swap_palette(new_palette_id);
 }
 
-const swap_palette: (id: string) => void = (id) => {
+const swap_palette: (id: string) => string = (id) => {
     const palette: number[][] = PALETTES[id];
     if (palette) {
         for (let i = 0; i < 4; i++) {
@@ -26,4 +30,5 @@ const swap_palette: (id: string) => void = (id) => {
             poke(0x3FC0 + color_address_offset + 2, colors[2]);
         }
     }
+    return id;
 }
