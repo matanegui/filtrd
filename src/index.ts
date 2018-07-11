@@ -22,7 +22,7 @@ let input: InputState;
 const state: {
     map?: any,
     pc?: Entity,
-    particles?: any[],
+    particles?: ParticleEmitter[],
     palette?: string,
     timers?: {
         pc_dead: number
@@ -47,11 +47,7 @@ const init: () => void = () => {
     state.palette = DEFAULT_PALETTE;
 
     //Test particles
-    const on_bubble_death: any = () => {
-        state.particles.filter((system: any) => system.id !== test_part.id);
-    };
-    const test_part: any = create_particles(120, 40, 'bubbles', on_bubble_death);
-    state.particles.push(test_part);
+    state.particles.push(create_particle_emitter(120, 50, PARTICLES.bubbles));
 };
 
 function TIC() {
@@ -110,6 +106,12 @@ function TIC() {
         if (is_pressed(input, Button.A)) {
             state.palette = switch_palette(state.palette);
             play_animation(animation, PcAnimations.UsingPhone);
+            //Test particles enable-disabled
+            state.particles
+                .filter((emitter: any) => emitter.system.id === 'bubbles')
+                .forEach((emitter: any) => {
+                    emitter.enabled = state.palette === Palettes.Chill ? false : true;
+                });
         }
     }
 
@@ -171,8 +173,8 @@ function TIC() {
     draw_entity(pc);
 
     //Particle test
-    state.particles.forEach((system: any) => {
-        draw_particles(system, delta);
+    state.particles.forEach((emitter: ParticleEmitter) => {
+        draw_particle_emitter(emitter, delta);
     });
 
     const word: string = `${state.palette.charAt(0).toUpperCase() + state.palette.substr(1)}`;
