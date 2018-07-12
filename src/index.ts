@@ -22,17 +22,16 @@ let input: InputState;
 const state: {
     map?: any,
     pc?: Entity,
+    particles?: ParticleEmitter[],
     palette?: string,
     timers?: {
         pc_dead: number
     }
 } = {};
 
-//  *GAME LOOP //
 const init: () => void = () => {
-
     state.timers = { pc_dead: 0 };
-
+    state.particles = [];
     state.pc = create_pc(32, 96);
 
     //Load map
@@ -45,6 +44,9 @@ const init: () => void = () => {
 
     //Test palette switch
     state.palette = DEFAULT_PALETTE;
+
+    //Test particles
+    state.particles.push(create_particle_emitter(120, 50, PARTICLES.boiling, true, false));
 };
 
 function TIC() {
@@ -103,6 +105,12 @@ function TIC() {
         if (is_pressed(input, Button.A)) {
             state.palette = switch_palette(state.palette);
             play_animation(animation, PcAnimations.UsingPhone);
+            //Test particles enable-disabled
+            state.particles
+                .filter((emitter: any) => emitter.system.id === 'boiling')
+                .forEach((emitter: any) => {
+                    emitter.enabled = state.palette === Palettes.Roast ? true : false;
+                });
         }
     }
 
@@ -162,6 +170,11 @@ function TIC() {
     });
 
     draw_entity(pc);
+
+    //Particle test
+    state.particles.forEach((emitter: ParticleEmitter) => {
+        draw_particle_emitter(emitter, delta);
+    });
 
     const word: string = `${state.palette.charAt(0).toUpperCase() + state.palette.substr(1)}`;
     print(word, 2, 130, 2);
