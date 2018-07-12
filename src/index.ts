@@ -30,7 +30,6 @@ const state: {
 } = {};
 
 const init: () => void = () => {
-
     state.timers = { pc_dead: 0 };
     state.particles = [];
     state.pc = create_pc(32, 96);
@@ -47,7 +46,7 @@ const init: () => void = () => {
     state.palette = DEFAULT_PALETTE;
 
     //Test particles
-    state.particles.push(create_particle_emitter(120, 50, PARTICLES.bubbles));
+    state.particles.push(create_particle_emitter(120, 50, PARTICLES.boiling, true, false));
 };
 
 function TIC() {
@@ -108,9 +107,9 @@ function TIC() {
             play_animation(animation, PcAnimations.UsingPhone);
             //Test particles enable-disabled
             state.particles
-                .filter((emitter: any) => emitter.system.id === 'bubbles')
+                .filter((emitter: any) => emitter.system.id === 'boiling')
                 .forEach((emitter: any) => {
-                    emitter.enabled = state.palette === Palettes.Chill ? false : true;
+                    emitter.enabled = state.palette === Palettes.Roast ? true : false;
                 });
         }
     }
