@@ -22,6 +22,24 @@ const boling_system: ParticleSystem = create_particle_system('boiling', boiling_
 
     });
 
+const drops_system: ParticleSystem = create_particle_system('drops', 0.5,
+    (e: ParticleEmitter, dt: number) => {
+        const area_x = 180;
+        const area_y = 16;
+        if (Math.random() < 0.5) {
+            e.particles.push(create_particle(e.x + (Math.random() - 0.5) * area_x, e.y + (Math.random() - 0.5) * area_y));
+        }
+        return e.particles;
+    },
+    (p: Particle, dt: number) => {
+        const speed = -5;
+        p.x = p.x + (Math.random()) * speed * dt;
+    },
+    (p: Particle, dt: number) => {
+        pix(p.x, p.y, 2);
+    });
+
 const PARTICLES: { [name: string]: ParticleSystem } = {
-    'boiling': boling_system
+    'boiling': boling_system,
+    'drops': drops_system
 }

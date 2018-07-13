@@ -12,7 +12,7 @@ const create_pc: (x: number, y: number) => Entity = (x, y) => {
     pc.sprite = create_sprite(265, { w: 2, h: 2 });
     pc.animation = create_animation('pc', 90);
     pc.movement = { direction: null, speed: 60, moving: false };
-    pc.collision = { enabled: true, body_box: { x: 3, y: 1, w: 10, h: 15 }, stand_box: { x: 0, y: 4, w: 16, h: 12 } };
+    pc.collision = { enabled: true, body_box: { x: 3, y: 1, w: 10, h: 15 }, stand_box: { x: 0, y: 6, w: 16, h: 10 } };
 
     const { animation } = pc;
     add_animation_state(animation, PcAnimations.WalkingSide, [258, 256, 260, 256]);

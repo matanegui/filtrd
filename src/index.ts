@@ -40,6 +40,10 @@ const init: () => void = () => {
         add_tile_data(state.map, i, [TileFlags.SOLID]);
         add_tile_data(state.map, 16 + i, [TileFlags.SOLID]);
     }
+    for (let i = 40; i <= 43; i++) {
+        add_tile_data(state.map, i, [TileFlags.SOLID]);
+        add_tile_data(state.map, 16 + i, [TileFlags.SOLID]);
+    }
     add_tile_data(state.map, 36, [TileFlags.FREEZING_WALKABLE]);
 
     //Test palette switch
@@ -47,6 +51,7 @@ const init: () => void = () => {
 
     //Test particles
     state.particles.push(create_particle_emitter(120, 50, PARTICLES.boiling, true, false));
+    state.particles.push(create_particle_emitter(120, 50, PARTICLES.drops, true, false));
 };
 
 function TIC() {
@@ -107,9 +112,12 @@ function TIC() {
             play_animation(animation, PcAnimations.UsingPhone);
             //Test particles enable-disabled
             state.particles
-                .filter((emitter: any) => emitter.system.id === 'boiling')
                 .forEach((emitter: any) => {
-                    emitter.enabled = state.palette === Palettes.Roast ? true : false;
+                    if (emitter.system.id === 'boiling') {
+                        emitter.enabled = state.palette === Palettes.Roast ? true : false;
+                    } else if (emitter.system.id === 'drops') {
+                        emitter.enabled = state.palette === Palettes.Dungeon ? true : false;
+                    }
                 });
         }
     }
@@ -125,7 +133,7 @@ function TIC() {
             const box = collision.body_box;
             const tiles: any[] = get_tiles_in_rect(state.map, mx + box.x, my + box.y, box.w, box.h);
             const is_colliding: boolean = tiles.some((tile: any) => {
-                return tile.flags[TileFlags.SOLID] || (tile.flags[TileFlags.FREEZING_WALKABLE] && state.palette !== Palettes.Chill)
+                return tile.flags[TileFlags.SOLID]
             });
             if (!is_colliding) {
                 pc.x = mx;
@@ -164,6 +172,9 @@ function TIC() {
         if (state.palette === Palettes.Chill) {
             if ([36, 37, 52, 53].indexOf(tile_id) !== -1) {
                 return tile_id + 2;
+            }
+            if ([41, 42, 57, 58].indexOf(tile_id) !== -1) {
+                return tile_id + 23;
             }
         }
         return tile_id;
