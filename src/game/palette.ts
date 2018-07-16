@@ -7,7 +7,7 @@ const enum Palettes {
 // format: dark, primary, light, complement //
 const PALETTES: any = {
     [Palettes.Dungeon]: [[32, 29, 36], [103, 89, 122], [207, 232, 173], [230, 85, 125]],
-    [Palettes.Chill]: [[2, 28, 39], [18, 57, 165], [214, 234, 241], [2, 128, 144]],
+    [Palettes.Chill]: [[2, 28, 39], [18, 57, 165], [214, 234, 241], [38, 173, 214]],
     [Palettes.Roast]: [[42, 3, 1], [145, 23, 31], [245, 203, 92], [245, 63, 28]]
 };
 

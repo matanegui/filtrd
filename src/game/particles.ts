@@ -15,7 +15,7 @@ const boling_system: ParticleSystem = create_particle_system('boiling', boiling_
                 ? [[0, 0], [1, 1], [2, 1], [3, 0]]
                 : p.life_timer < boiling_life * 0.75
                     ? [[0, 2], [1, 3], [2, 3], [3, 2], [0, 1], [3, 1], [1, 0], [2, 0]]
-                    : [[0, 2], [3, 2]];
+                    : [[0, 3], [3, 3], [0, 0], [3, 0]];
         pxs.forEach((px: any) => {
             pix(p.x + px[0], p.y - px[1], 2)
         });

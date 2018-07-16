@@ -1,6 +1,7 @@
 //  *CONSTANTS  //
 const SCREEN_WIDTH: number = 240;
 const SCREEN_HEIGHT: number = 136;
+const MEMORY_BANK: number = 0;
 const DEFAULT_PALETTE: Palettes = Palettes.Dungeon;
 
 // Utils
@@ -16,7 +17,7 @@ const are_colliding: (ax: number, ay: number, aw: number, ah: number, bx: number
 
 //  *GLOBALS    //
 let t: number = 0;
-let delta: number = 0;
+let dt: number = 0;
 let input: InputState;
 
 const state: {
@@ -29,7 +30,19 @@ const state: {
     }
 } = {};
 
-const init: () => void = () => {
+const on_palette_change: (state: any) => void = (state) => {
+    //Test particles enable-disabled
+    state.particles
+        .forEach((emitter: any) => {
+            if (emitter.system.id === 'boiling') {
+                emitter.enabled = state.palette === Palettes.Roast ? true : false;
+            } else if (emitter.system.id === 'drops') {
+                emitter.enabled = state.palette === Palettes.Dungeon ? true : false;
+            }
+        });
+}
+
+const init: (state: any) => void = () => {
     state.timers = { pc_dead: 0 };
     state.particles = [];
     state.pc = create_pc(32, 96);
@@ -48,122 +61,56 @@ const init: () => void = () => {
 
     //Test palette switch
     state.palette = DEFAULT_PALETTE;
+    on_palette_change(state);
 
     //Test particles
     state.particles.push(create_particle_emitter(120, 50, PARTICLES.boiling, true, false));
-    state.particles.push(create_particle_emitter(120, 50, PARTICLES.drops, true, false));
+    state.particles.push(create_particle_emitter(120, 50, PARTICLES.drops, true, true));
 };
 
 function TIC() {
 
     /* -------------------- INIT -------------------- */
     if (t === 0) {
-        init();
+        init(state);
     }
 
     /* -------------------- TIMER UPDATES -------------------- */
 
     const nt: number = time();
-    delta = (nt - t) / 1000;
+    dt = (nt - t) / 1000;
     t = nt;
 
+    const { pc } = state;
+
     /* -------------------- INPUT -------------------- */
-    const pc = state.pc;
-    const { sprite, movement, animation, collision, flags } = pc;
-
     input = get_input();
-    if (!flags.dead) {
-        //Movement and animation
-        const moving: boolean = is_down(input, Button.UP) || is_down(input, Button.DOWN) || is_down(input, Button.LEFT) || is_down(input, Button.RIGHT);
-        if (moving) {
-            //Set facing direction
-            movement.moving = true;
-            movement.direction = is_down(input, Button.LEFT) ? Direction.LEFT : (is_down(input, Button.RIGHT) ? Direction.RIGHT : (is_down(input, Button.UP) ? Direction.UP : (is_down(input, Button.DOWN) ? Direction.DOWN : null)));
-            const { direction } = movement;
-
-            //Set velocity
-            movement.velocity_x = is_down(input, Button.LEFT) ? -movement.speed : (is_down(input, Button.RIGHT) ? movement.speed : 0);
-            movement.velocity_y = is_down(input, Button.UP) ? -movement.speed : (is_down(input, Button.DOWN) ? movement.speed : 0);
-
-            //Animate
-            if (direction === Direction.LEFT) {
-                sprite.flip = 1;
-                play_animation(animation, PcAnimations.WalkingSide);
-            } else if (direction === Direction.RIGHT) {
-                sprite.flip = 0;
-                play_animation(animation, PcAnimations.WalkingSide);
-            } else if (direction === Direction.UP) {
-                sprite.flip = 0;
-                play_animation(animation, PcAnimations.WalkingUp);
-            } else if (direction === Direction.DOWN) {
-                sprite.flip = 0;
-                play_animation(animation, PcAnimations.WalkingDown);
-            }
-        } else {
-            movement.velocity_x = 0;
-            movement.velocity_y = 0;
-            movement.moving = false;
-            stop_animation(animation, 1);
-        }
+    if (!pc.flags.dead) {
+        //PC movement
+        const pc_movement_direction: Direction = is_down(input, Button.LEFT) ? Direction.LEFT : (is_down(input, Button.RIGHT) ? Direction.RIGHT : (is_down(input, Button.UP) ? Direction.UP : (is_down(input, Button.DOWN) ? Direction.DOWN : null)));
+        move_pc(pc, pc_movement_direction);
 
         // Palette switching
         if (is_pressed(input, Button.A)) {
+            play_animation(state.pc.animation, PcAnimations.UsingPhone);
             state.palette = switch_palette(state.palette);
-            play_animation(animation, PcAnimations.UsingPhone);
-            //Test particles enable-disabled
-            state.particles
-                .forEach((emitter: any) => {
-                    if (emitter.system.id === 'boiling') {
-                        emitter.enabled = state.palette === Palettes.Roast ? true : false;
-                    } else if (emitter.system.id === 'drops') {
-                        emitter.enabled = state.palette === Palettes.Dungeon ? true : false;
-                    }
-                });
+            on_palette_change(state);
         }
     }
 
     /* -------------------- LOGIC -------------------- */
-    if (!flags.dead) {
-        //Update pcs position
-        if (movement.moving) {
-            //Calculate new poisition
-            const mx = pc.x + (movement.velocity_x * delta);
-            const my = pc.y + (movement.velocity_y * delta);
-            // Check for tilemap collision
-            const box = collision.body_box;
-            const tiles: any[] = get_tiles_in_rect(state.map, mx + box.x, my + box.y, box.w, box.h);
-            const is_colliding: boolean = tiles.some((tile: any) => {
-                return tile.flags[TileFlags.SOLID]
-            });
-            if (!is_colliding) {
-                pc.x = mx;
-                pc.y = my;
-            }
-        }
-
-        //Check drowning colission
-        const box = collision.stand_box;
-        const feet_tiles: any[] = get_tiles_in_rect(state.map, pc.x + box.x, pc.y + box.y, box.w, box.h);
-        const is_drowning: boolean = feet_tiles.some((tile: any) => tile.flags[TileFlags.FREEZING_WALKABLE] && state.palette !== Palettes.Chill);
-        if (is_drowning) {
-            // Kill PC
-            pc.flags.dead = true;
-            sfx(63, 48, 98);
-            play_animation(pc.animation, PcAnimations.Drowning, false);
-        }
-    } else {
+    update_pc(pc, state, dt);
+    if (pc.flags.dead) {
         // Reset level
-        state.timers.pc_dead += delta;
+        state.timers.pc_dead += dt;
         if (state.timers.pc_dead > 1.7) {
             state.timers.pc_dead = 0;
             state.palette = swap_palette(Palettes.Dungeon);
+            on_palette_change(state);
             pc.flags.dead = false;
             state.pc = create_pc(32, 96);
         }
     }
-
-    update_animation(animation, delta);
-
 
     /* -------------------- DRAW -------------------- */
     cls(0);
@@ -184,7 +131,7 @@ function TIC() {
 
     //Particle test
     state.particles.forEach((emitter: ParticleEmitter) => {
-        draw_particle_emitter(emitter, delta);
+        draw_particle_emitter(emitter, dt);
     });
 
     const word: string = `${state.palette.charAt(0).toUpperCase() + state.palette.substr(1)}`;
