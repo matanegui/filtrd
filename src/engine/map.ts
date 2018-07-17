@@ -16,29 +16,45 @@ const create_tile: (id: number, flags?: string[], box?: { x: number, y: number, 
     }, {})
 });
 
+/* TILESET */
+interface Tileset {
+    data: string[][]
+}
+
+const create_tileset: () => Tileset = () => ({ data: [] });
+
+const add_tileset_entry: (tileset: Tileset, id: number, flags: string[]) => void = (tileset, id, flags) => {
+    tileset.data[id] = flags;
+}
+
 /* TILEMAP */
-const create_tilemap: (x: number, y: number, width: number, height: number) => any = (x, y, width, height) => ({
+
+interface Tilemap {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    tileset: Tileset;
+}
+
+const create_tilemap: (x: number, y: number, width: number, height: number, tileset: Tileset) => Tilemap = (x, y, width, height, tileset) => ({
     x,
     y,
     width,
     height,
-    data: []
+    tileset
 });
 
-const add_tile_data: (tilemap: any, id: number, flags: string[]) => void = (tilemap, id, flags) => {
-    tilemap.data[id] = flags;
-}
-
 // Get tile at pixel coordinates
-const get_tile: (tilemap: any, x: number, y: number) => any = (tilemap, x, y) => {
+const get_tile: (tilemap: Tilemap, x: number, y: number) => any = (tilemap, x, y) => {
     const map_x: number = Math.floor((x - tilemap.x) / TILE_SIZE);
     const map_y: number = Math.floor((y - tilemap.y) / TILE_SIZE);
     const tile_id = mget(map_x, map_y);
-    const flags = tilemap.data[tile_id];
+    const flags = tilemap.tileset.data[tile_id];
     return create_tile(tile_id, flags, { x: Math.floor((x - tilemap.x) / TILE_SIZE) * TILE_SIZE, y: Math.floor((y - tilemap.y) / TILE_SIZE) * TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE })
 }
 
-const get_tiles_in_rect: (tilemap: any, x: number, y: number, w: number, h: number) => any[] = (tilemap, x, y, w, h) => {
+const get_tiles_in_rect: (tilemap: Tilemap, x: number, y: number, w: number, h: number) => any[] = (tilemap, x, y, w, h) => {
     const tiles: any[] = [];
     const extra_x = w % TILE_SIZE + Math.floor(x) % TILE_SIZE;
     const extra_y = h % TILE_SIZE + Math.floor(y) % TILE_SIZE;
@@ -53,6 +69,6 @@ const get_tiles_in_rect: (tilemap: any, x: number, y: number, w: number, h: numb
     return tiles;
 }
 
-const draw_map: (tilemap: any, remap: any) => void = (tilemap, remap) => {
+const draw_map: (tilemap: Tilemap, remap: any) => void = (tilemap, remap) => {
     map(tilemap.x, tilemap.y, tilemap.width, tilemap.height, 0, 0, 14, 1, remap);
 };
