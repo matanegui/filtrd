@@ -1,3 +1,21 @@
+# Running
+Requires:
+- TIC-80 globally available through the `tic80` command
+- [tic80-typescript](https://github.com/scambier/tic80-typescript) available through the `tsc80` command
+- Typescript globally installed
+- TSC80 custom settings for further optimization:
+
+**tic80-typescript.js (compressAndLaunch function)**
+```
+...
+mangle: {
+    toplevel: true,
+    properties: true,
+    reserved: ['TIC']
+}
+...
+```
+
 # Notes
 
 ## Filters

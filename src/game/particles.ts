@@ -1,5 +1,10 @@
+enum Particles {
+    Boiling,
+    Drops
+}
+
 const boiling_life = 0.8;
-const boling_system: ParticleSystem = create_particle_system('boiling', boiling_life,
+const boiling_system: ParticleSystem = create_particle_system('boiling', boiling_life,
     (e: ParticleEmitter, dt: number) => {
         const area_x = 180;
         const area_y = 16;
@@ -39,7 +44,6 @@ const drops_system: ParticleSystem = create_particle_system('drops', 0.5,
         pix(p.x, p.y, 2);
     });
 
-const PARTICLES: { [name: string]: ParticleSystem } = {
-    'boiling': boling_system,
-    'drops': drops_system
-}
+let PARTICLES: ParticleSystem[] = [];
+PARTICLES[Particles.Boiling] = boiling_system;
+PARTICLES[Particles.Drops] = drops_system;

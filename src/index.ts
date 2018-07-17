@@ -2,18 +2,7 @@
 const SCREEN_WIDTH: number = 240;
 const SCREEN_HEIGHT: number = 136;
 const MEMORY_BANK: number = 0;
-const DEFAULT_PALETTE: Palettes = Palettes.Dungeon;
-
-// Utils
-const isPointInRect = (x, y, rx, ry, rw, rh) => {
-    return x >= rx && x < rx + rw && y >= ry && y < ry + rh
-}
-
-const are_colliding: (ax: number, ay: number, aw: number, ah: number, bx: number, by: number, bw: number, bh: number) => boolean = (ax, ay, aw, ah, bx, by, bw, bh) => {
-    if (ax + aw < bx || ax > bx + bw) return false;
-    if (ay + ah < by || ay > by + bh) return false;
-    return true;
-}
+const DEFAULT_PALETTE_INDEX = 0;
 
 //  *GLOBALS    //
 let t: number = 0;
@@ -24,7 +13,7 @@ const state: {
     map?: any,
     pc?: Entity,
     particles?: ParticleEmitter[],
-    palette?: string,
+    palette_index?: number,
     timers?: {
         pc_dead: number
     }
@@ -35,9 +24,9 @@ const on_palette_change: (state: any) => void = (state) => {
     state.particles
         .forEach((emitter: any) => {
             if (emitter.system.id === 'boiling') {
-                emitter.enabled = state.palette === Palettes.Roast ? true : false;
+                emitter.enabled = state.palette_index === Palettes.Roast ? true : false;
             } else if (emitter.system.id === 'drops') {
-                emitter.enabled = state.palette === Palettes.Dungeon ? true : false;
+                emitter.enabled = state.palette_index === Palettes.Dungeon ? true : false;
             }
         });
 }
@@ -47,25 +36,27 @@ const init: (state: any) => void = () => {
     state.particles = [];
     state.pc = create_pc(32, 96);
 
-    //Load map
-    state.map = create_tilemap(0, 0, 32, 18);
+    //Create tileset
+    const tileset: Tileset = create_tileset();
     for (let i = 2; i <= 15; i++) {
-        add_tile_data(state.map, i, [TileFlags.SOLID]);
-        add_tile_data(state.map, 16 + i, [TileFlags.SOLID]);
+        add_tileset_entry(tileset, i, [TileFlags.SOLID]);
+        add_tileset_entry(tileset, 16 + i, [TileFlags.SOLID]);
     }
     for (let i = 40; i <= 43; i++) {
-        add_tile_data(state.map, i, [TileFlags.SOLID]);
-        add_tile_data(state.map, 16 + i, [TileFlags.SOLID]);
+        add_tileset_entry(tileset, i, [TileFlags.SOLID]);
+        add_tileset_entry(tileset, 16 + i, [TileFlags.SOLID]);
     }
-    add_tile_data(state.map, 36, [TileFlags.FREEZING_WALKABLE]);
+    add_tileset_entry(tileset, 36, [TileFlags.FREEZING_WALKABLE]);
+    //Create map
+    state.map = create_tilemap(0, 0, 32, 18, tileset);
 
     //Test palette switch
-    state.palette = DEFAULT_PALETTE;
+    state.palette_index = DEFAULT_PALETTE_INDEX;
     on_palette_change(state);
 
     //Test particles
-    state.particles.push(create_particle_emitter(120, 50, PARTICLES.boiling, true, false));
-    state.particles.push(create_particle_emitter(120, 50, PARTICLES.drops, true, true));
+    state.particles.push(create_particle_emitter(120, 50, PARTICLES[Particles.Boiling], true, false));
+    state.particles.push(create_particle_emitter(120, 50, PARTICLES[Particles.Drops], true, true));
 };
 
 function TIC() {
@@ -81,9 +72,8 @@ function TIC() {
     dt = (nt - t) / 1000;
     t = nt;
 
-    const { pc } = state;
-
     /* -------------------- INPUT -------------------- */
+    const { pc } = state;
     input = get_input();
     if (!pc.flags.dead) {
         //PC movement
@@ -93,7 +83,7 @@ function TIC() {
         // Palette switching
         if (is_pressed(input, Button.A)) {
             play_animation(state.pc.animation, PcAnimations.UsingPhone);
-            state.palette = switch_palette(state.palette);
+            state.palette_index = switch_palette(state.palette_index);
             on_palette_change(state);
         }
     }
@@ -103,9 +93,9 @@ function TIC() {
     if (pc.flags.dead) {
         // Reset level
         state.timers.pc_dead += dt;
-        if (state.timers.pc_dead > 1.7) {
+        if (state.timers.pc_dead > 1.5) {
             state.timers.pc_dead = 0;
-            state.palette = swap_palette(Palettes.Dungeon);
+            state.palette_index = swap_palette(Palettes.Dungeon);
             on_palette_change(state);
             pc.flags.dead = false;
             state.pc = create_pc(32, 96);
@@ -114,17 +104,17 @@ function TIC() {
 
     /* -------------------- DRAW -------------------- */
     cls(0);
+
+    let remap: any = {};
+    if (state.palette_index === Palettes.Chill) {
+        remap = {
+            45: 66, 60: 82, 36: 38, 37: 39, 52: 54, 53: 55, 41: 64, 42: 65, 57: 80, 58: 81
+        }
+    }
     draw_map(state.map, (tile_id: number) => {
         //Water tiles become frozen
-        if (state.palette === Palettes.Chill) {
-            if ([36, 37, 52, 53].indexOf(tile_id) !== -1) {
-                return tile_id + 2;
-            }
-            if ([41, 42, 57, 58].indexOf(tile_id) !== -1) {
-                return tile_id + 23;
-            }
-        }
-        return tile_id;
+        const new_tile_id: number = remap[tile_id];
+        return new_tile_id ? new_tile_id : tile_id;
     });
 
     draw_entity(pc);
@@ -134,6 +124,5 @@ function TIC() {
         draw_particle_emitter(emitter, dt);
     });
 
-    const word: string = `${state.palette.charAt(0).toUpperCase() + state.palette.substr(1)}`;
-    print(word, 2, 130, 2);
+    print(`${PALETTES[state.palette_index].id.charAt(0).toUpperCase() + PALETTES[state.palette_index].id.substr(1)}`, 2, 130, 2);
 }
