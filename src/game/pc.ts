@@ -7,7 +7,7 @@ const enum PcAnimations {
 };
 
 const create_pc: (x: number, y: number) => Entity = (x, y) => {
-    const pc: Entity = entity(x, y);
+    const pc: Entity = create_entity(x, y);
 
     pc.sprite = create_sprite(265, { w: 2, h: 2 });
     pc.animation = create_animation('pc', 90);

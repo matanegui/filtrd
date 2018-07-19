@@ -27,31 +27,34 @@ interface EntityFlags {
 interface Entity {
     x: number;
     y: number;
-    sprite: Sprite;
     flags: EntityFlags;
     //Components
+    sprite?: Sprite;
     animation?: AnimationData;
     movement?: Movement;
     collision?: Collision;
+    particles?: ParticleSource;
 }
 
 const create_entity_flags: () => EntityFlags = () => ({
     dead: false
 })
 
-const entity: (x: number, y: number) => Entity = (x = 0, y = 0) => ({
+const create_entity: (x: number, y: number) => Entity = (x = 0, y = 0) => ({
     x,
     y,
-    flags: create_entity_flags(),
-    sprite: create_sprite(0, {})
+    flags: create_entity_flags()
 });
 
-const draw_entity: (e: Entity) => void = (e) => {
+const draw_entity: (e: Entity, dt: number) => void = (e, dt) => {
     if (e.sprite) {
         let { id, w, h, scale, flip, rotate, colorkey } = e.sprite;
         if (e.animation) {
             id = e.animation.frame;
         }
         spr(id, e.x, e.y, colorkey, scale, flip, rotate, w, h);
+    }
+    if (e.particles) {
+
     }
 }

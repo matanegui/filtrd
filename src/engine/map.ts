@@ -18,13 +18,21 @@ const create_tile: (id: number, flags?: string[], box?: { x: number, y: number, 
 
 /* TILESET */
 interface Tileset {
-    data: string[][]
+    flags: string[][]
+    spawners: ((id: number, x: number, y: number) => void)[][]
 }
 
-const create_tileset: () => Tileset = () => ({ data: [] });
+const create_tileset: () => Tileset = () => ({
+    flags: [],
+    spawners: []
+});
 
-const add_tileset_entry: (tileset: Tileset, id: number, flags: string[]) => void = (tileset, id, flags) => {
-    tileset.data[id] = flags;
+const add_tile_flags: (tileset: Tileset, id: number, flags: string[]) => void = (tileset, id, flags) => {
+    tileset.flags[id] = flags;
+}
+
+const add_tile_spawner: (tileset: Tileset, id: number, spawner: (id: number, x: number, y: number) => void) => void = (tileset, id, spawner) => {
+    tileset.spawners[id] ? tileset.spawners[id].push(spawner) : tileset.spawners[id] = [spawner];
 }
 
 /* TILEMAP */
@@ -45,12 +53,28 @@ const create_tilemap: (x: number, y: number, width: number, height: number, tile
     tileset
 });
 
+const spawn_tilemap: (tilemap: Tilemap) => void = (tilemap) => {
+    for (let i = 0; i < tilemap.width; i++) {
+        for (let j = 0; j < tilemap.width; j++) {
+            const tile_id = mget(i, j);
+            const spawners = tilemap.tileset.spawners[tile_id];
+            if (spawners) {
+                const screen_x: number = i * TILE_SIZE;
+                const screen_y: number = j * TILE_SIZE;
+                spawners.forEach((spawner) => {
+                    spawner(tile_id, screen_x, screen_y);
+                })
+            }
+        }
+    }
+};
+
 // Get tile at pixel coordinates
 const get_tile: (tilemap: Tilemap, x: number, y: number) => any = (tilemap, x, y) => {
     const map_x: number = Math.floor((x - tilemap.x) / TILE_SIZE);
     const map_y: number = Math.floor((y - tilemap.y) / TILE_SIZE);
     const tile_id = mget(map_x, map_y);
-    const flags = tilemap.tileset.data[tile_id];
+    const flags = tilemap.tileset.flags[tile_id];
     return create_tile(tile_id, flags, { x: Math.floor((x - tilemap.x) / TILE_SIZE) * TILE_SIZE, y: Math.floor((y - tilemap.y) / TILE_SIZE) * TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE })
 }
 

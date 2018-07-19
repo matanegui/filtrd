@@ -12,7 +12,7 @@ let input: InputState;
 const state: {
     map?: any,
     pc?: Entity,
-    particles?: ParticleEmitter[],
+    particles?: Entity[],
     palette_index?: number,
     timers?: {
         pc_dead: number
@@ -22,11 +22,11 @@ const state: {
 const on_palette_change: (state: any) => void = (state) => {
     //Test particles enable-disabled
     state.particles
-        .forEach((emitter: any) => {
-            if (emitter.system.id === 'boiling') {
-                emitter.enabled = state.palette_index === Palettes.Roast ? true : false;
-            } else if (emitter.system.id === 'drops') {
-                emitter.enabled = state.palette_index === Palettes.Dungeon ? true : false;
+        .forEach(({ particles }) => {
+            if (particles.system.id === 'boiling') {
+                particles.enabled = state.palette_index === Palettes.Roast ? true : false;
+            } else if (particles.system.id === 'drops') {
+                particles.enabled = state.palette_index === Palettes.Dungeon ? true : false;
             }
         });
 }
@@ -38,25 +38,37 @@ const init: (state: any) => void = () => {
 
     //Create tileset
     const tileset: Tileset = create_tileset();
+    // Set up flags
     for (let i = 2; i <= 15; i++) {
-        add_tileset_entry(tileset, i, [TileFlags.SOLID]);
-        add_tileset_entry(tileset, 16 + i, [TileFlags.SOLID]);
+        add_tile_flags(tileset, i, [TileFlags.SOLID]);
+        add_tile_flags(tileset, 16 + i, [TileFlags.SOLID]);
     }
     for (let i = 40; i <= 43; i++) {
-        add_tileset_entry(tileset, i, [TileFlags.SOLID]);
-        add_tileset_entry(tileset, 16 + i, [TileFlags.SOLID]);
+        add_tile_flags(tileset, i, [TileFlags.SOLID]);
+        add_tile_flags(tileset, 16 + i, [TileFlags.SOLID]);
     }
-    add_tileset_entry(tileset, 36, [TileFlags.FREEZING_WALKABLE]);
+    add_tile_flags(tileset, 36, [TileFlags.FREEZING_WALKABLE]);
+    //Set up spawners
+    const drops_spawner = (tile_id, x, y) => {
+        const drops = create_particle_emitter(x, y, create_particle_source('drops', PARTICLES[Particles.Drops], true, true));
+        state.particles.push(drops);
+    };
+    const boling_spawner = (tile_id, x, y) => {
+        const bubbles = create_particle_emitter(x, y, create_particle_source('bubbles', PARTICLES[Particles.Boiling], true, false));
+        state.particles.push(bubbles);
+    };
+    add_tile_spawner(tileset, 36, drops_spawner);
+    add_tile_spawner(tileset, 37, drops_spawner);
+    add_tile_spawner(tileset, 36, boling_spawner);
+    add_tile_spawner(tileset, 37, boling_spawner);
     //Create map
     state.map = create_tilemap(0, 0, 32, 18, tileset);
-
+    //Spawn particles
+    spawn_tilemap(state.map);
     //Test palette switch
     state.palette_index = DEFAULT_PALETTE_INDEX;
     on_palette_change(state);
 
-    //Test particles
-    state.particles.push(create_particle_emitter(120, 50, PARTICLES[Particles.Boiling], true, false));
-    state.particles.push(create_particle_emitter(120, 50, PARTICLES[Particles.Drops], true, true));
 };
 
 function TIC() {
@@ -117,10 +129,10 @@ function TIC() {
         return new_tile_id ? new_tile_id : tile_id;
     });
 
-    draw_entity(pc);
+    draw_entity(pc, dt);
 
     //Particle test
-    state.particles.forEach((emitter: ParticleEmitter) => {
+    state.particles.forEach((emitter: Entity) => {
         draw_particle_emitter(emitter, dt);
     });
 
