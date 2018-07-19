@@ -53,14 +53,15 @@ const init: (state: any) => void = () => {
         const drops = create_particle_emitter(x, y, create_particle_source('drops', PARTICLES[Particles.Drops], true, true));
         state.particles.push(drops);
     };
-    const boling_spawner = (tile_id, x, y) => {
+    const boiling_spawner = (tile_id, x, y) => {
         const bubbles = create_particle_emitter(x, y, create_particle_source('bubbles', PARTICLES[Particles.Boiling], true, false));
         state.particles.push(bubbles);
     };
     add_tile_spawner(tileset, 36, drops_spawner);
     add_tile_spawner(tileset, 37, drops_spawner);
-    add_tile_spawner(tileset, 36, boling_spawner);
-    add_tile_spawner(tileset, 37, boling_spawner);
+    add_tile_spawner(tileset, 36, boiling_spawner);
+    add_tile_spawner(tileset, 37, boiling_spawner);
+
     //Create map
     state.map = create_tilemap(0, 0, 32, 18, tileset);
     //Spawn particles
@@ -69,10 +70,12 @@ const init: (state: any) => void = () => {
     state.palette_index = DEFAULT_PALETTE_INDEX;
     on_palette_change(state);
 
+    //Test music
+    music(1);
+
 };
 
 function TIC() {
-
     /* -------------------- INIT -------------------- */
     if (t === 0) {
         init(state);
@@ -87,7 +90,7 @@ function TIC() {
     /* -------------------- INPUT -------------------- */
     const { pc } = state;
     input = get_input();
-    if (!pc.flags.dead) {
+    if (!pc.flags[EntityFlags.DEAD]) {
         //PC movement
         const pc_movement_direction: Direction = is_down(input, Button.LEFT) ? Direction.LEFT : (is_down(input, Button.RIGHT) ? Direction.RIGHT : (is_down(input, Button.UP) ? Direction.UP : (is_down(input, Button.DOWN) ? Direction.DOWN : null)));
         move_pc(pc, pc_movement_direction);
@@ -102,14 +105,14 @@ function TIC() {
 
     /* -------------------- LOGIC -------------------- */
     update_pc(pc, state, dt);
-    if (pc.flags.dead) {
+    if (pc.flags[EntityFlags.DEAD]) {
         // Reset level
         state.timers.pc_dead += dt;
         if (state.timers.pc_dead > 1.5) {
             state.timers.pc_dead = 0;
             state.palette_index = swap_palette(Palettes.Dungeon);
             on_palette_change(state);
-            pc.flags.dead = false;
+            pc.flags[EntityFlags.DEAD] = false;
             state.pc = create_pc(32, 96);
         }
     }

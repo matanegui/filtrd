@@ -62,7 +62,7 @@ const move_pc: (pc: Entity, dir: Direction) => void = (pc, dir) => {
 
 const update_pc: (pc: Entity, state: any, dt: number) => void = (pc, state, dt) => {
     const { movement, animation, collision, flags } = pc;
-    if (!flags.dead) {
+    if (!flags[EntityFlags.DEAD]) {
         //Update pcs position
         if (movement.moving) {
             //Calculate new poisition
@@ -86,7 +86,7 @@ const update_pc: (pc: Entity, state: any, dt: number) => void = (pc, state, dt) 
         const is_drowning: boolean = feet_tiles.some((tile: any) => tile.flags[TileFlags.FREEZING_WALKABLE] && state.palette_index !== Palettes.Chill);
         if (is_drowning) {
             // Kill PC
-            pc.flags.dead = true;
+            pc.flags[EntityFlags.DEAD] = true;
             sfx(63, 48, 98);
             play_animation(pc.animation, PcAnimations.Drowning, false);
         }

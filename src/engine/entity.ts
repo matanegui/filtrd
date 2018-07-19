@@ -1,4 +1,9 @@
 enum Direction { UP, DOWN, LEFT, RIGHT };
+enum EntityFlags {
+    DEAD,
+    PARTICLE_EMIT_ON_DISABLED,
+    PARTICLE_DISABLED
+}
 
 interface Movement {
     direction: Direction;
@@ -20,14 +25,10 @@ interface Components {
     collision?: Collision
 }
 
-interface EntityFlags {
-    dead: boolean;
-}
-
 interface Entity {
     x: number;
     y: number;
-    flags: EntityFlags;
+    flags: any;
     //Components
     sprite?: Sprite;
     animation?: AnimationData;
@@ -36,14 +37,10 @@ interface Entity {
     particles?: ParticleSource;
 }
 
-const create_entity_flags: () => EntityFlags = () => ({
-    dead: false
-})
-
 const create_entity: (x: number, y: number) => Entity = (x = 0, y = 0) => ({
     x,
     y,
-    flags: create_entity_flags()
+    flags: {}
 });
 
 const draw_entity: (e: Entity, dt: number) => void = (e, dt) => {
