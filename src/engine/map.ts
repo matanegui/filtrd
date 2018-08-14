@@ -1,4 +1,9 @@
 const TILE_SIZE: number = 8;
+const WORLD_LEVELS: number = 64;
+const WORLD_WIDTH: number = 8;
+const LEVEL_WIDTH: number = 30;
+const LEVEL_HEIGHT: number = 17;
+const MAP_Y_OFFSET: number = 8;
 
 /* TILE */
 interface Tile {
@@ -19,7 +24,7 @@ const create_tile: (id: number, flags?: string[], box?: { x: number, y: number, 
 /* TILESET */
 interface Tileset {
     flags: string[][]
-    spawners: ((id: number, x: number, y: number) => void)[][]
+    spawners: ((id: number, x: number, y: number) => Entity)[][]
 }
 
 const create_tileset: () => Tileset = () => ({
@@ -31,7 +36,7 @@ const add_tile_flags: (tileset: Tileset, id: number, flags: string[]) => void = 
     tileset.flags[id] = flags;
 }
 
-const add_tile_spawner: (tileset: Tileset, id: number, spawner: (id: number, x: number, y: number) => void) => void = (tileset, id, spawner) => {
+const add_tile_spawner: (tileset: Tileset, id: number, spawner: (id: number, x: number, y: number) => Entity) => void = (tileset, id, spawner) => {
     tileset.spawners[id] ? tileset.spawners[id].push(spawner) : tileset.spawners[id] = [spawner];
 }
 
@@ -40,29 +45,37 @@ const add_tile_spawner: (tileset: Tileset, id: number, spawner: (id: number, x: 
 interface Tilemap {
     x: number;
     y: number;
+    map_x: number;
+    map_y: number;
     width: number;
     height: number;
     tileset: Tileset;
 }
 
-const create_tilemap: (x: number, y: number, width: number, height: number, tileset: Tileset) => Tilemap = (x, y, width, height, tileset) => ({
-    x,
-    y,
-    width,
-    height,
-    tileset
-});
+const create_tilemap: (x: number, y: number, level_number: number, tileset: Tileset) => Tilemap = (x, y, level_number, tileset) => {
+    const map_x = ((WORLD_LEVELS % level_number) - 2) * LEVEL_WIDTH;
+    const map_y = ((Math.ceil(level_number / WORLD_WIDTH) - 1) * LEVEL_HEIGHT);
+    return {
+        x,
+        y,
+        map_x,
+        map_y,
+        width: LEVEL_WIDTH,
+        height: LEVEL_HEIGHT,
+        tileset
+    }
+};
 
-const spawn_tilemap: (tilemap: Tilemap) => void = (tilemap) => {
-    for (let i = 0; i < tilemap.width; i++) {
-        for (let j = 0; j < tilemap.width; j++) {
+const spawn_tilemap: (tilemap: Tilemap, state: any) => void = (tilemap) => {
+    for (let i = tilemap.map_x; i < tilemap.map_x + LEVEL_WIDTH; i++) {
+        for (let j = tilemap.map_y; j < tilemap.map_y + LEVEL_HEIGHT; j++) {
             const tile_id = mget(i, j);
             const spawners = tilemap.tileset.spawners[tile_id];
             if (spawners) {
-                const screen_x: number = i * TILE_SIZE;
-                const screen_y: number = j * TILE_SIZE;
+                const screen_x: number = tilemap.x + (i - tilemap.map_x) * TILE_SIZE;
+                const screen_y: number = tilemap.y + (j - tilemap.map_y) * TILE_SIZE;
                 spawners.forEach((spawner) => {
-                    spawner(tile_id, screen_x, screen_y);
+                    state.entities.push(spawner(tile_id, screen_x, screen_y));
                 })
             }
         }
@@ -71,11 +84,11 @@ const spawn_tilemap: (tilemap: Tilemap) => void = (tilemap) => {
 
 // Get tile at pixel coordinates
 const get_tile: (tilemap: Tilemap, x: number, y: number) => any = (tilemap, x, y) => {
-    const map_x: number = Math.floor((x - tilemap.x) / TILE_SIZE);
-    const map_y: number = Math.floor((y - tilemap.y) / TILE_SIZE);
+    const map_x: number = tilemap.map_x + Math.floor((x - tilemap.x) / TILE_SIZE);
+    const map_y: number = tilemap.map_y + Math.floor((y - tilemap.y) / TILE_SIZE);
     const tile_id = mget(map_x, map_y);
     const flags = tilemap.tileset.flags[tile_id];
-    return create_tile(tile_id, flags, { x: Math.floor((x - tilemap.x) / TILE_SIZE) * TILE_SIZE, y: Math.floor((y - tilemap.y) / TILE_SIZE) * TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE })
+    return create_tile(tile_id, flags, { x: Math.floor((x - tilemap.map_x) / TILE_SIZE) * TILE_SIZE, y: Math.floor((y - tilemap.map_y) / TILE_SIZE) * TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE })
 }
 
 const get_tiles_in_rect: (tilemap: Tilemap, x: number, y: number, w: number, h: number) => any[] = (tilemap, x, y, w, h) => {
@@ -94,5 +107,5 @@ const get_tiles_in_rect: (tilemap: Tilemap, x: number, y: number, w: number, h: 
 }
 
 const draw_map: (tilemap: Tilemap, remap: any) => void = (tilemap, remap) => {
-    map(tilemap.x, tilemap.y, tilemap.width, tilemap.height, 0, 0, 14, 1, remap);
+    map(tilemap.map_x, tilemap.map_y, tilemap.width, tilemap.height, tilemap.x, tilemap.y, 14, 1, remap);
 };

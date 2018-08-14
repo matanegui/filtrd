@@ -52,7 +52,7 @@ declare function sfx(id: number, note?: number | string, duration?: number, chan
 
 declare function spr(id: number, x: number, y: number, colorkey?: number, scale?: number, flip?: number | boolean, rotate?: number, w?: number, h?: number);
 
-declare function sync();
+declare function sync(mask: number, bank: number, tocart?: boolean);
 
 declare function textri(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, u1: number, v1: number, u2: number, v2: number, u3: number, v3: number, use_map?: boolean, colorkey?: number);
 

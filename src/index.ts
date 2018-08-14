@@ -1,7 +1,7 @@
 //  *CONSTANTS  //
 const SCREEN_WIDTH: number = 240;
 const SCREEN_HEIGHT: number = 136;
-const MEMORY_BANK: number = 0;
+const DEFAULT_MEMORY_BANK: number = 0;
 const DEFAULT_PALETTE_INDEX = 0;
 
 //  *GLOBALS    //
@@ -10,10 +10,12 @@ let dt: number = 0;
 let input: InputState;
 
 const state: {
-    map?: any,
     pc?: Entity,
-    particles?: Entity[],
+    map?: Tilemap,
+    bank?: any,
+    entities?: Entity[],
     palette_index?: number,
+    level_index?: number,
     timers?: {
         pc_dead: number
     }
@@ -21,73 +23,49 @@ const state: {
 
 const on_palette_change: (state: any) => void = (state) => {
     //Test particles enable-disabled
-    state.particles
+    state.entities
         .forEach(({ particles }) => {
-            if (particles.system.id === 'boiling') {
-                particles.enabled = state.palette_index === Palettes.Roast ? true : false;
-            } else if (particles.system.id === 'drops') {
-                particles.enabled = state.palette_index === Palettes.Dungeon ? true : false;
+            if (particles) {
+                if (particles.system.id === 'boiling') {
+                    particles.enabled = state.palette_index === Palettes.Roast ? true : false;
+                } else if (particles.system.id === 'drops') {
+                    particles.enabled = state.palette_index === Palettes.Dungeon ? true : false;
+                }
             }
         });
 }
 
 const init: (state: any) => void = () => {
-    state.timers = { pc_dead: 0 };
-    state.particles = [];
+    state.bank = switch_bank(DEFAULT_MEMORY_BANK);
+    state.level_index = 59;
     state.pc = create_pc(32, 96);
+    state.timers = { pc_dead: 0 };
+    state.entities = [];
 
-    //Create tileset
-    const tileset: Tileset = create_tileset();
-    // Set up flags
-    for (let i = 2; i <= 15; i++) {
-        add_tile_flags(tileset, i, [TileFlags.SOLID]);
-        add_tile_flags(tileset, 16 + i, [TileFlags.SOLID]);
-    }
-    for (let i = 40; i <= 43; i++) {
-        add_tile_flags(tileset, i, [TileFlags.SOLID]);
-        add_tile_flags(tileset, 16 + i, [TileFlags.SOLID]);
-    }
-    add_tile_flags(tileset, 36, [TileFlags.FREEZING_WALKABLE]);
-    //Set up spawners
-    const drops_spawner = (tile_id, x, y) => {
-        const drops = create_particle_emitter(x, y, create_particle_source('drops', PARTICLES[Particles.Drops], true, true));
-        state.particles.push(drops);
-    };
-    const boiling_spawner = (tile_id, x, y) => {
-        const bubbles = create_particle_emitter(x, y, create_particle_source('bubbles', PARTICLES[Particles.Boiling], true, false));
-        state.particles.push(bubbles);
-    };
-    add_tile_spawner(tileset, 36, drops_spawner);
-    add_tile_spawner(tileset, 37, drops_spawner);
-    add_tile_spawner(tileset, 36, boiling_spawner);
-    add_tile_spawner(tileset, 37, boiling_spawner);
-
-    //Create map
-    state.map = create_tilemap(0, 0, 32, 18, tileset);
-    //Spawn particles
-    spawn_tilemap(state.map);
+    //Instantiate map
+    state.map = create_tilemap(0, 0, state.level_index, state.bank.tileset);
+    spawn_tilemap(state.map, state);
     //Test palette switch
     state.palette_index = DEFAULT_PALETTE_INDEX;
     on_palette_change(state);
 
-    //Test music
-    music(1);
+    trace(words(0));
 
 };
 
 function TIC() {
-    /* -------------------- INIT -------------------- */
+    // -------------------- INIT -------------------- 
     if (t === 0) {
         init(state);
     }
 
-    /* -------------------- TIMER UPDATES -------------------- */
+    // -------------------- TIMER UPDATES --------------------
 
     const nt: number = time();
     dt = (nt - t) / 1000;
     t = nt;
 
-    /* -------------------- INPUT -------------------- */
+    // -------------------- INPUT -------------------- 
     const { pc } = state;
     input = get_input();
     if (!pc.flags[EntityFlags.DEAD]) {
@@ -103,7 +81,7 @@ function TIC() {
         }
     }
 
-    /* -------------------- LOGIC -------------------- */
+    // -------------------- LOGIC -------------------- 
     update_pc(pc, state, dt);
     if (pc.flags[EntityFlags.DEAD]) {
         // Reset level
@@ -117,7 +95,7 @@ function TIC() {
         }
     }
 
-    /* -------------------- DRAW -------------------- */
+    // -------------------- DRAW -------------------- 
     cls(0);
 
     let remap: any = {};
@@ -135,8 +113,10 @@ function TIC() {
     draw_entity(pc, dt);
 
     //Particle test
-    state.particles.forEach((emitter: Entity) => {
-        draw_particle_emitter(emitter, dt);
+    state.entities.forEach((entity: Entity) => {
+        if (entity.particles) {
+            draw_particle_emitter(entity, dt);
+        }
     });
 
     print(`${PALETTES[state.palette_index].id.charAt(0).toUpperCase() + PALETTES[state.palette_index].id.substr(1)}`, 2, 130, 2);
