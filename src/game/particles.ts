@@ -8,7 +8,7 @@ const boiling_system: ParticleSystem = create_particle_system('boiling', boiling
     (e: Entity, dt: number) => {
         const area_x = 8;
         const area_y = 8;
-        if (Math.random() < 0.01) {
+        if (Math.random() < 0.005) {
             e.particles.particles.push(create_particle(e.x + Math.random() * area_x, e.y + Math.random() * area_y));
         }
         return e.particles.particles;
@@ -33,7 +33,7 @@ const drops_system: ParticleSystem = create_particle_system('drops', 0.5,
     (e: Entity, dt: number) => {
         const area_x = 8;
         const area_y = 8;
-        if (Math.random() < 0.01) {
+        if (Math.random() < 0.005) {
             e.particles.particles.push(create_particle(e.x + Math.random() * area_x, e.y + Math.random() * area_y));
         }
         return e.particles.particles;

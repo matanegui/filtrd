@@ -83,7 +83,7 @@ const update_pc: (pc: Entity, state: any, dt: number) => void = (pc, state, dt) 
         //Check drowning colission
         const box = collision.stand_box;
         const feet_tiles: any[] = get_tiles_in_rect(state.map, pc.x + box.x, pc.y + box.y, box.w, box.h);
-        const is_drowning: boolean = feet_tiles.some((tile: any) => tile.flags[TileFlags.FREEZING_WALKABLE] && state.palette_index !== Palettes.Chill);
+        const is_drowning: boolean = feet_tiles.some((tile: any) => tile.flags[TileFlags.FREEZING] && state.palette_index !== Palettes.Chill);
         if (is_drowning) {
             // Kill PC
             pc.flags[EntityFlags.DEAD] = true;

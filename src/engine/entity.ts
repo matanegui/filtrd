@@ -52,6 +52,6 @@ const draw_entity: (e: Entity, dt: number) => void = (e, dt) => {
         spr(id, e.x, e.y, colorkey, scale, flip, rotate, w, h);
     }
     if (e.particles) {
-
+        draw_particle_emitter(e, dt);
     }
 }

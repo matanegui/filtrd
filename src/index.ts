@@ -12,8 +12,9 @@ let input: InputState;
 const state: {
     pc?: Entity,
     map?: Tilemap,
-    bank?: any,
     entities?: Entity[],
+    ui?: any[],
+    bank?: number,
     palette_index?: number,
     level_index?: number,
     timers?: {
@@ -36,22 +37,39 @@ const on_palette_change: (state: any) => void = (state) => {
 }
 
 const init: (state: any) => void = () => {
-    state.bank = switch_bank(DEFAULT_MEMORY_BANK);
+    state.bank = 0;
     state.level_index = 59;
     state.pc = create_pc(32, 96);
     state.timers = { pc_dead: 0 };
     state.entities = [];
-
-    //Instantiate map
-    state.map = create_tilemap(0, 0, state.level_index, state.bank.tileset);
-    spawn_tilemap(state.map, state);
-    //Test palette switch
-    state.palette_index = DEFAULT_PALETTE_INDEX;
+    state.ui = [];
+    state.palette_index = swap_palette(DEFAULT_PALETTE_INDEX);
     on_palette_change(state);
 
-    trace(words(0));
+    //Create map
+    const tileset: Tileset = create_tileset();
+    for (let i = 2; i <= 15; i++) {
+        add_tile_flags(tileset, i, [TileFlags.SOLID]);
+        add_tile_flags(tileset, 16 + i, [TileFlags.SOLID]);
+    }
+    for (let i = 40; i <= 43; i++) {
+        add_tile_flags(tileset, i, [TileFlags.SOLID]);
+        add_tile_flags(tileset, 16 + i, [TileFlags.SOLID]);
+    }
+    add_tile_flags(tileset, 36, [TileFlags.FREEZING]);
+    //Set up spawners
+    const drops_spawner = (tile_id, x, y) => create_particle_emitter(x, y, create_particle_source('drops', PARTICLES[Particles.Drops], true, true));
+    const boiling_spawner = (tile_id, x, y) => create_particle_emitter(x, y, create_particle_source('bubbles', PARTICLES[Particles.Boiling], true, false));
+    add_tile_spawner(tileset, 36, drops_spawner);
+    add_tile_spawner(tileset, 37, drops_spawner);
+    add_tile_spawner(tileset, 36, boiling_spawner);
+    add_tile_spawner(tileset, 37, boiling_spawner);
+    state.map = create_tilemap(0, 0, state.level_index, tileset);
+
+    state.entities = spawn_tilemap(state.map);
 
 };
+
 
 function TIC() {
     // -------------------- INIT -------------------- 
@@ -79,6 +97,11 @@ function TIC() {
             state.palette_index = switch_palette(state.palette_index);
             on_palette_change(state);
         }
+
+        if (is_pressed(input, Button.B)) {
+            state.ui.push(create_textbox(20, 20, "EL DOTOR BISMAN\nPuso al pan al vino vino,\nsobre las cartas la mesa.\nY por eso lo mandaron a\nmatar."));
+        }
+
     }
 
     // -------------------- LOGIC -------------------- 
@@ -110,13 +133,20 @@ function TIC() {
         return new_tile_id ? new_tile_id : tile_id;
     });
 
-    draw_entity(pc, dt);
+    //Draw entities
+    insertion_sort(
+        [
+            state.pc,
+            ...state.entities,
+            ...state.ui
+        ],
+        (a: Entity, b: Entity) => { return a.y > b.y })
+        .forEach((entity: Entity) => {
+            draw_entity(entity, dt);
+        });
 
-    //Particle test
-    state.entities.forEach((entity: Entity) => {
-        if (entity.particles) {
-            draw_particle_emitter(entity, dt);
-        }
+    state.ui.forEach((uie: any) => {
+        draw_textbox(uie);
     });
 
     print(`${PALETTES[state.palette_index].id.charAt(0).toUpperCase() + PALETTES[state.palette_index].id.substr(1)}`, 2, 130, 2);
