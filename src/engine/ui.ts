@@ -1,26 +1,32 @@
-interface Textbox {
-    x: number,
-    y: number,
+interface TextboxData {
     w: number,
     h: number,
     text_color: number,
     border_color: number,
     background_color: number,
-    life: number,
+    life_time: number,
     speed: number,
     text: string
-};
+}
+
+type Textbox = Entity & TextboxData;
 
 const create_textbox: (x: number, y: number, text: string) => Textbox = (x, y, text) => ({
-    x, y, w: 160, h: 48, text_color: 2, border_color: 2, speed: 20, background_color: 0, life: 0, text
+    ...create_entity(x, y),
+    draw: function () {
+        this.life_time = this.life_time + 0.017;
+        rect(this.x, this.y, this.w, this.h, this.border_color);
+        rect(this.x + 1, this.y + 1, this.w - 2, this.h - 2, this.background_color);
+        line(this.x + 1, this.y + this.h, this.x + this.w - 1, this.y + this.h, this.background_color);
+        line(this.x + this.w, this.y + 1, this.x + this.w, this.y + this.h, this.background_color);
+        print(this.text.substring(0, Math.min(this.life_time * this.speed, this.text.length)), this.x + 4, this.y + 4, this.text_color);
+    },
+    w: 160,
+    h: 48,
+    text_color: 2,
+    border_color: 2,
+    background_color: 0,
+    life_time: 0,
+    speed: 20,
+    text
 });
-
-const draw_textbox: (box: Textbox) => void = (box) => {
-    box.life = box.life + dt;
-    rect(box.x, box.y, box.w, box.h, box.border_color);
-    rect(box.x + 1, box.y + 1, box.w - 2, box.h - 2, box.background_color);
-    line(box.x + 1, box.y + box.h, box.x + box.w - 1, box.y + box.h, box.background_color);
-    line(box.x + box.w, box.y + 1, box.x + box.w, box.y + box.h, box.background_color);
-    print(box.text.substring(0, Math.min(box.life * box.speed, box.text.length)), box.x + 4, box.y + 4, box.text_color);
-    print(`${PALETTES[state.palette_index].id.charAt(0).toUpperCase() + PALETTES[state.palette_index].id.substr(1)}`, 2, 130, 2);
-};

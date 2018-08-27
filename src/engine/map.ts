@@ -52,9 +52,7 @@ interface Tilemap {
     tileset: Tileset;
 }
 
-const create_tilemap: (x: number, y: number, level_number: number, tileset: Tileset) => Tilemap = (x, y, level_number, tileset) => {
-    const map_x = ((WORLD_LEVELS % level_number) - 2) * LEVEL_WIDTH;
-    const map_y = ((Math.ceil(level_number / WORLD_WIDTH) - 1) * LEVEL_HEIGHT);
+const create_tilemap: (x: number, y: number, map_x: number, map_y: number, tileset: Tileset) => Tilemap = (x, y, map_x, map_y, tileset) => {
     return {
         x,
         y,

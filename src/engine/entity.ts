@@ -28,30 +28,16 @@ interface Components {
 interface Entity {
     x: number;
     y: number;
-    flags: any;
+    props: any;
     //Components
-    sprite?: Sprite;
-    animation?: AnimationData;
-    movement?: Movement;
-    collision?: Collision;
-    particles?: ParticleSource;
+    update: (delta: number, state?: any) => void,
+    draw: () => void
 }
 
 const create_entity: (x: number, y: number) => Entity = (x = 0, y = 0) => ({
     x,
     y,
-    flags: {}
+    props: {},
+    update: function (dt, state) { },
+    draw: function () { },
 });
-
-const draw_entity: (e: Entity, dt: number) => void = (e, dt) => {
-    if (e.sprite) {
-        let { id, w, h, scale, flip, rotate, colorkey } = e.sprite;
-        if (e.animation) {
-            id = e.animation.frame;
-        }
-        spr(id, e.x, e.y, colorkey, scale, flip, rotate, w, h);
-    }
-    if (e.particles) {
-        draw_particle_emitter(e, dt);
-    }
-}

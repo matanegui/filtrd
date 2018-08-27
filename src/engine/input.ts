@@ -28,7 +28,3 @@ const is_pressed: (input: InputState, id: number) => boolean = (input, id) => {
     const key_index: number = BUTTONS.indexOf(id);
     return (key_index !== -1) && input.pressed.charAt(key_index) === '1';
 };
-
-const handle_input: (input, state) => void = (input, state) => {
-    context
-}
