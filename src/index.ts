@@ -70,7 +70,7 @@ function TIC() {
         }
 
         if (is_pressed($input, Button.B)) {
-            state.ui.push(create_textbox(20, 20, "EL DOTOR BISMAN\nPuso al pan al vino vino,\nsobre las cartas la mesa.\nY por eso lo mandaron a\nmatar."));
+            state.ui.push(create_textbox(20, 20, 120, "I... TAKE... NO... PRISIONERS.", false));
         }
 
     }

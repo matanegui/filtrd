@@ -1,4 +1,4 @@
-interface TextboxData {
+interface TextBoxData {
     w: number,
     h: number,
     text_color: number,
@@ -6,27 +6,57 @@ interface TextboxData {
     background_color: number,
     life_time: number,
     speed: number,
-    text: string
+    text: string,
+    small_font: boolean
 }
 
-type Textbox = Entity & TextboxData;
+type Textbox = Entity & { box: TextBoxData };
 
-const create_textbox: (x: number, y: number, text: string) => Textbox = (x, y, text) => ({
-    ...create_entity(x, y),
-    draw: function () {
-        this.life_time = this.life_time + 0.017;
-        rect(this.x, this.y, this.w, this.h, this.border_color);
-        rect(this.x + 1, this.y + 1, this.w - 2, this.h - 2, this.background_color);
-        line(this.x + 1, this.y + this.h, this.x + this.w - 1, this.y + this.h, this.background_color);
-        line(this.x + this.w, this.y + 1, this.x + this.w, this.y + this.h, this.background_color);
-        print(this.text.substring(0, Math.min(this.life_time * this.speed, this.text.length)), this.x + 4, this.y + 4, this.text_color, true, 1, true);
-    },
-    w: 160,
-    h: 48,
-    text_color: 2,
-    border_color: 2,
-    background_color: 0,
-    life_time: 0,
-    speed: 20,
-    text
-});
+
+const create_textbox: (x: number, y: number, w: number, text: string, small_font?: boolean) => Textbox = (x, y, w, text, small_font = true) => {
+
+    const get_wrap_options: (text: string, w: number) => { h: number, wrapped_text: string } = (text, w) => {
+        let words = text.split(' ');
+        const char_width = small_font ? 4 : 6;
+        const char_height = 7;
+        const margin: number = 6;
+        let line_count = 1;
+        let line_width: number = 0;
+        words = words.map((word: string) => {
+            if (line_width + word.length * char_width > w - margin) {
+                line_width = word.length * char_width + char_width;
+                line_count += 1;
+                return '\n' + word;
+            } else {
+                line_width += word.length * char_width + char_width;
+                return word;
+            }
+        })
+        return { h: line_count * char_height + margin, wrapped_text: words.join(' ') };
+    }
+    const wrap: { h: number, wrapped_text: string } = get_wrap_options(text, w);
+
+    return {
+        ...create_entity(x, y),
+        box: {
+            w,
+            h: wrap.h,
+            text_color: 2,
+            border_color: 2,
+            background_color: 0,
+            life_time: 0,
+            speed: 25,
+            text: wrap.wrapped_text,
+            small_font: small_font
+        },
+        draw: function () {
+            const { box } = this;
+            box.life_time = box.life_time + 0.017;
+            rect(this.x, this.y, box.w, box.h, box.border_color);
+            rect(this.x + 1, this.y + 1, box.w - 2, box.h - 2, box.background_color);
+            line(this.x + 1, this.y + box.h, this.x + box.w - 1, this.y + box.h, box.background_color);
+            line(this.x + box.w, this.y + 1, this.x + box.w, this.y + box.h, box.background_color);
+            print(box.text.substring(0, Math.min(box.life_time * box.speed, box.text.length)), this.x + 4, this.y + 4, box.text_color, true, 1, small_font);
+        }
+    }
+};
