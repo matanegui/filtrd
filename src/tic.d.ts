@@ -42,7 +42,7 @@ declare function poke(addr: number, val: number): void;
 
 declare function poke4(addr: number, val: number): void; // Not in the wiki
 
-declare function print(str: string, x?: number, y?: number, color?: number, fixed?: boolean, scale?: number): void;
+declare function print(str: string, x?: number, y?: number, color?: number, fixed?: boolean, scale?: number, smallfont?: boolean): void;
 
 declare function rect(x: number, y: number, w: number, h: number, color: number);
 

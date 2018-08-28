@@ -19,7 +19,7 @@ const create_textbox: (x: number, y: number, text: string) => Textbox = (x, y, t
         rect(this.x + 1, this.y + 1, this.w - 2, this.h - 2, this.background_color);
         line(this.x + 1, this.y + this.h, this.x + this.w - 1, this.y + this.h, this.background_color);
         line(this.x + this.w, this.y + 1, this.x + this.w, this.y + this.h, this.background_color);
-        print(this.text.substring(0, Math.min(this.life_time * this.speed, this.text.length)), this.x + 4, this.y + 4, this.text_color);
+        print(this.text.substring(0, Math.min(this.life_time * this.speed, this.text.length)), this.x + 4, this.y + 4, this.text_color, true, 1, true);
     },
     w: 160,
     h: 48,
