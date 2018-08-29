@@ -42,69 +42,78 @@ const add_tile_spawner: (tileset: Tileset, id: number, spawner: (id: number, x: 
 
 /* TILEMAP */
 
-interface Tilemap {
-    x: number;
-    y: number;
+interface TilemapData {
     map_x: number;
     map_y: number;
     width: number;
     height: number;
     tileset: Tileset;
+    remap: (tile_id: number) => number,
+    spawn: (tilemap: Tilemap) => Entity[],
+    get_tile: (x: number, y: number) => Tile,
+    get_tiles_in_rect: (x: number, y: number, w: number, h: number) => Tile[]
 }
 
-const create_tilemap: (x: number, y: number, map_x: number, map_y: number, tileset: Tileset) => Tilemap = (x, y, map_x, map_y, tileset) => {
+type Tilemap = Entity & TilemapData;
+
+const create_tilemap: (x: number, y: number, map_x: number, map_y: number, tileset: Tileset, remap?: (tile_id: number) => number) => Tilemap = (x, y, map_x, map_y, tileset, remap) => {
+
+    function draw(): void {
+        map(this.map_x, this.map_y, this.width, this.height, this.x, this.y, 14, 1);
+    };
+
+    function spawn(tilemap: Tilemap): Entity[] {
+        let entities: Entity[] = [];
+        for (let i = tilemap.map_x; i < tilemap.map_x + LEVEL_WIDTH; i++) {
+            for (let j = tilemap.map_y; j < tilemap.map_y + LEVEL_HEIGHT; j++) {
+                const tile_id = mget(i, j);
+                const spawners = tilemap.tileset.spawners[tile_id];
+                if (spawners) {
+                    const screen_x: number = tilemap.x + (i - tilemap.map_x) * TILE_SIZE;
+                    const screen_y: number = tilemap.y + (j - tilemap.map_y) * TILE_SIZE;
+                    const spawn: Entity[] = spawners.map((spawner) => spawner(tile_id, screen_x, screen_y));
+                    entities = [...entities, ...spawn];
+                }
+            }
+        }
+        return entities;
+    };
+
+    // Get tile at pixel coordinates
+    function get_tile(x: number, y: number): Tile {
+        const map_x: number = this.map_x + Math.floor((x - this.x) / TILE_SIZE);
+        const map_y: number = this.map_y + Math.floor((y - this.y) / TILE_SIZE);
+        const tile_id = mget(map_x, map_y);
+        const flags = this.tileset.flags[tile_id];
+        return create_tile(tile_id, flags, { x: Math.floor((x - this.map_x) / TILE_SIZE) * TILE_SIZE, y: Math.floor((y - this.map_y) / TILE_SIZE) * TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE })
+    }
+
+    function get_tiles_in_rect(x: number, y: number, w: number, h: number): Tile[] {
+        const tiles: any[] = [];
+        const extra_x = w % TILE_SIZE + Math.floor(x) % TILE_SIZE;
+        const extra_y = h % TILE_SIZE + Math.floor(y) % TILE_SIZE;
+        const tiles_x = Math.floor(w / TILE_SIZE) + (extra_x > 0 ? (extra_x > TILE_SIZE ? 2 : 1) : 0);
+        const tiles_y = Math.floor(h / TILE_SIZE) + (extra_y > 0 ? (extra_y > TILE_SIZE ? 2 : 1) : 0);
+        for (let i = 0; i < tiles_x; i++) {
+            for (let j = 0; j < tiles_y; j++) {
+                const tile = this.get_tile(x + i * TILE_SIZE, y + j * TILE_SIZE);
+                tiles.push(tile);
+            }
+        }
+        return tiles;
+    }
+
     return {
-        x,
-        y,
+        ...create_entity(x, y),
         map_x,
         map_y,
         width: LEVEL_WIDTH,
         height: LEVEL_HEIGHT,
-        tileset
+        tileset,
+        remap,
+        spawn,
+        get_tile,
+        get_tiles_in_rect,
+        draw
     }
-};
-
-const spawn_tilemap: (tilemap: Tilemap) => Entity[] = (tilemap) => {
-    let entities: Entity[] = [];
-    for (let i = tilemap.map_x; i < tilemap.map_x + LEVEL_WIDTH; i++) {
-        for (let j = tilemap.map_y; j < tilemap.map_y + LEVEL_HEIGHT; j++) {
-            const tile_id = mget(i, j);
-            const spawners = tilemap.tileset.spawners[tile_id];
-            if (spawners) {
-                const screen_x: number = tilemap.x + (i - tilemap.map_x) * TILE_SIZE;
-                const screen_y: number = tilemap.y + (j - tilemap.map_y) * TILE_SIZE;
-                const spawn: Entity[] = spawners.map((spawner) => spawner(tile_id, screen_x, screen_y));
-                entities = [...entities, ...spawn];
-            }
-        }
-    }
-    return entities;
-};
-
-// Get tile at pixel coordinates
-const get_tile: (tilemap: Tilemap, x: number, y: number) => any = (tilemap, x, y) => {
-    const map_x: number = tilemap.map_x + Math.floor((x - tilemap.x) / TILE_SIZE);
-    const map_y: number = tilemap.map_y + Math.floor((y - tilemap.y) / TILE_SIZE);
-    const tile_id = mget(map_x, map_y);
-    const flags = tilemap.tileset.flags[tile_id];
-    return create_tile(tile_id, flags, { x: Math.floor((x - tilemap.map_x) / TILE_SIZE) * TILE_SIZE, y: Math.floor((y - tilemap.map_y) / TILE_SIZE) * TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE })
-}
-
-const get_tiles_in_rect: (tilemap: Tilemap, x: number, y: number, w: number, h: number) => any[] = (tilemap, x, y, w, h) => {
-    const tiles: any[] = [];
-    const extra_x = w % TILE_SIZE + Math.floor(x) % TILE_SIZE;
-    const extra_y = h % TILE_SIZE + Math.floor(y) % TILE_SIZE;
-    const tiles_x = Math.floor(w / TILE_SIZE) + (extra_x > 0 ? (extra_x > TILE_SIZE ? 2 : 1) : 0);
-    const tiles_y = Math.floor(h / TILE_SIZE) + (extra_y > 0 ? (extra_y > TILE_SIZE ? 2 : 1) : 0);
-    for (let i = 0; i < tiles_x; i++) {
-        for (let j = 0; j < tiles_y; j++) {
-            const tile = get_tile(tilemap, x + i * TILE_SIZE, y + j * TILE_SIZE);
-            tiles.push(tile);
-        }
-    }
-    return tiles;
-}
-
-const draw_map: (tilemap: Tilemap, remap: any) => void = (tilemap, remap) => {
-    map(tilemap.map_x, tilemap.map_y, tilemap.width, tilemap.height, tilemap.x, tilemap.y, 14, 1, remap);
 };

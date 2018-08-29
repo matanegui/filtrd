@@ -1,4 +1,6 @@
-declare interface InputState {
+// INPUT CAPTURE //
+
+interface InputState {
     down: string;
     pressed: string;
 }
@@ -28,3 +30,34 @@ const is_pressed: (input: InputState, id: number) => boolean = (input, id) => {
     const key_index: number = BUTTONS.indexOf(id);
     return (key_index !== -1) && input.pressed.charAt(key_index) === '1';
 };
+
+// INPUT MANAGER //
+
+interface InputListener {
+    on_input: (input: InputState, state: any) => void
+}
+
+interface InputManager {
+    on_input: (input: InputState, state: any) => void,
+    set_listener: (listener: InputListener) => void,
+    free_listener: () => void,
+    listener: InputListener,
+    previous_listener: InputListener
+}
+
+const create_input_manager: () => InputManager = () => ({
+    previous_listener: null,
+    listener: null,
+    on_input: function (input, state) {
+        if (this.listener) {
+            this.listener.on_input(input, state);
+        }
+    },
+    set_listener: function (listener: InputListener) {
+        this.previous_listener = this.listener;
+        this.listener = listener;
+    },
+    free_listener: function () {
+        this.listener = this.previous_listener;
+    }
+});
