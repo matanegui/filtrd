@@ -1,0 +1,4 @@
+enum TileFlags {
+    SOLID,
+    FREEZING
+};

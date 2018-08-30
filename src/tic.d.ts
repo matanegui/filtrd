@@ -42,7 +42,7 @@ declare function poke(addr: number, val: number): void;
 
 declare function poke4(addr: number, val: number): void; // Not in the wiki
 
-declare function print(str: string, x?: number, y?: number, color?: number, fixed?: boolean, scale?: number): void;
+declare function print(str: string, x?: number, y?: number, color?: number, fixed?: boolean, scale?: number, smallfont?: boolean): void;
 
 declare function rect(x: number, y: number, w: number, h: number, color: number);
 
@@ -52,7 +52,7 @@ declare function sfx(id: number, note?: number | string, duration?: number, chan
 
 declare function spr(id: number, x: number, y: number, colorkey?: number, scale?: number, flip?: number | boolean, rotate?: number, w?: number, h?: number);
 
-declare function sync();
+declare function sync(mask: number, bank: number, tocart?: boolean);
 
 declare function textri(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, u1: number, v1: number, u2: number, v2: number, u3: number, v3: number, use_map?: boolean, colorkey?: number);
 
