@@ -22,6 +22,11 @@ const create_pc: (x: number, y: number) => Entity = (x, y) => {
                 ui.push(textbox);
                 $input_manager.set_listener(textbox);
             }
+
+            if (is_pressed(input, Button.B)) {
+                play_animation(this.animation, PcAnimations.UsingPhone);
+                $palette_index = switch_palette($palette_index);
+            }
         }
     }
 

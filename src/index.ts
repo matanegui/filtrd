@@ -7,7 +7,6 @@ const DEFAULT_PALETTE_INDEX = 0;
 //  *GLOBALS    //
 let $t: number = 0;
 let $dt: number = 0;
-let $input: InputState;
 let $palette_index: number = 0;
 let $input_manager: InputManager;
 const state: any = {};
@@ -71,8 +70,8 @@ function TIC() {
 
     // -------------------- INPUT -------------------- 
     const { pc } = state;
-    $input = get_input();
-    $input_manager.on_input($input, state);
+    const input: InputState = get_input();
+    $input_manager.on_input(input, state);
 
     // -------------------- LOGIC -------------------- 
 
