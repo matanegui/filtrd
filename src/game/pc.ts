@@ -18,7 +18,7 @@ const create_pc: (x: number, y: number) => Entity = (x, y) => {
 
             if (is_pressed(input, Button.A)) {
                 play_animation(this.animation, PcAnimations.UsingPhone);
-                const textbox: Textbox = create_textbox(20, 20, 120, "This is a test textbox. For textboxing purposes only.", false);
+                const textbox: Textbox = create_textbox(20, 20, "This is a test textbox. For textboxing purposes only.", 120, false);
                 ui.push(textbox);
                 $input_manager.set_listener(textbox);
             }
@@ -56,11 +56,6 @@ const create_pc: (x: number, y: number) => Entity = (x, y) => {
                 sprite.flip = 0;
                 play_animation(animation, PcAnimations.WalkingDown);
             }
-        } else {
-            movement.velocity_x = 0;
-            movement.velocity_y = 0;
-            movement.moving = false;
-            stop_animation(animation, 1);
         }
     };
 
@@ -82,7 +77,12 @@ const create_pc: (x: number, y: number) => Entity = (x, y) => {
                     this.x = mx;
                     this.y = my;
                 }
+            } else {
+                movement.velocity_x = 0;
+                movement.velocity_y = 0;
+                stop_animation(animation, 1);
             }
+            movement.moving = false;
 
             //Check drowning colission
             const box = collision.stand_box;

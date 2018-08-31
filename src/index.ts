@@ -2,22 +2,21 @@
 const SCREEN_WIDTH: number = 240;
 const SCREEN_HEIGHT: number = 136;
 const DEFAULT_MEMORY_BANK: number = 0;
-const DEFAULT_PALETTE_INDEX = 0;
-
+const DEFAULT_PALETTE_INDEX = 1;
+const WORLD_LEVELS = 64;
 //  *GLOBALS    //
 let $t: number = 0;
 let $dt: number = 0;
-let $palette_index: number = 0;
+let $palette_index: number;
 let $input_manager: InputManager;
 const state: any = {};
 
-
 const init: (state: any) => void = () => {
 
-    $palette_index = swap_palette(DEFAULT_PALETTE_INDEX);
+    //$palette_index = swap_palette(DEFAULT_PALETTE_INDEX);
     $input_manager = create_input_manager();
 
-    state.level_index = 59;
+    state.level_index = 52;
     state.pc = create_pc(32, 96);
     state.ui = [];
 
@@ -26,32 +25,16 @@ const init: (state: any) => void = () => {
 
     //Create map
     const tileset: Tileset = create_tileset();
-    for (let i = 2; i <= 15; i++) {
-        add_tile_flags(tileset, i, [TileFlags.SOLID]);
-        add_tile_flags(tileset, 16 + i, [TileFlags.SOLID]);
-    }
-    for (let i = 40; i <= 43; i++) {
-        add_tile_flags(tileset, i, [TileFlags.SOLID]);
-        add_tile_flags(tileset, 16 + i, [TileFlags.SOLID]);
-    }
-    add_tile_flags(tileset, 36, [TileFlags.FREEZING]);
-    const map_x = ((WORLD_LEVELS % state.level_index) - 2) * LEVEL_WIDTH;
-    const map_y = ((Math.ceil(state.level_index / WORLD_WIDTH) - 1) * LEVEL_HEIGHT);
-
-    //Take fucking remap logic outta here
-    let tile_remap: any = {};
-    if ($palette_index === Palettes.Chill) {
-        tile_remap = {
-            45: 66, 60: 82, 36: 38, 37: 39, 52: 54, 53: 55, 41: 64, 42: 65, 57: 80, 58: 81
+    let tiles: number[] = [];
+    const tiles_exclude: number[] = [32, 33, 48, 49];
+    for (let i = 2; i <= 65; i++) {
+        if (tiles_exclude.every((t: number) => t !== i)) {
+            tiles.push(i);
         }
     }
-    const remap: (tile_id: number) => number = (tile_id) => {
-        //Water tiles become frozen
-        const new_tile_id: number = remap[tile_id];
-        return new_tile_id ? new_tile_id : tile_id;
-    }
-
-    state.map = create_tilemap(0, 0, map_x, map_y, tileset, remap);
+    tiles = [...tiles, 80, 81];
+    tileset.add_tiles_flag(TileFlags.SOLID, tiles);
+    state.map = create_tilemap(0, 0, 90, 102, tileset);
 
 };
 
@@ -60,8 +43,8 @@ function TIC() {
     // -------------------- INIT -------------------- 
     if ($t === 0) {
         init(state);
+        music(1, 0, true);
     }
-
     // -------------------- TIMER UPDATES --------------------
 
     const nt: number = time();
@@ -84,6 +67,7 @@ function TIC() {
     cls(0);
 
     state.map.draw();
+
     //Draw entities
     insertion_sort(
         [
@@ -98,6 +82,8 @@ function TIC() {
     state.ui.forEach((e: any) => {
         e.draw();
     });
+    /*
 
-    print(`${PALETTES[$palette_index].id.charAt(0).toUpperCase() + PALETTES[$palette_index].id.substr(1)}`, 2, 130, 2);
+print(`${PALETTES[$palette_index].id.charAt(0).toUpperCase() + PALETTES[$palette_index].id.substr(1)}`, 2, 130, 2);
+*/
 }
