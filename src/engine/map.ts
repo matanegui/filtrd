@@ -1,8 +1,7 @@
 const TILE_SIZE: number = 8;
-const WORLD_LEVELS: number = 64;
 const WORLD_WIDTH: number = 8;
 const LEVEL_WIDTH: number = 30;
-const LEVEL_HEIGHT: number = 17;
+const LEVEL_HEIGHT: number = 18;
 const MAP_Y_OFFSET: number = 8;
 
 /* TILE */
@@ -24,21 +23,35 @@ const create_tile: (id: number, flags?: number[], box?: { x: number, y: number, 
 /* TILESET */
 interface Tileset {
     flags: number[][]
-    spawners: ((id: number, x: number, y: number) => Entity)[][]
+    spawners: ((id: number, x: number, y: number) => Entity)[][],
+    add_tiles_flag: (flag: number, tiles: number[]) => void,
+    add_tile_spawner: (id: number, spawner: (id: number, x: number, y: number) => Entity) => void
+
 }
 
-const create_tileset: () => Tileset = () => ({
-    flags: [],
-    spawners: []
-});
+const create_tileset: () => Tileset = () => {
 
-const add_tile_flags: (tileset: Tileset, id: number, flags: number[]) => void = (tileset, id, flags) => {
-    tileset.flags[id] = flags;
-}
+    function add_tiles_flag(flag: number, tiles: number[]): void {
+        tiles.forEach((tile_id: number) => {
+            if (!this.flags[tile_id]) {
+                this.flags[tile_id] = [flag];
+            } else {
+                this.flags[tile_id].push(flag);
+            }
+        })
+    }
 
-const add_tile_spawner: (tileset: Tileset, id: number, spawner: (id: number, x: number, y: number) => Entity) => void = (tileset, id, spawner) => {
-    tileset.spawners[id] ? tileset.spawners[id].push(spawner) : tileset.spawners[id] = [spawner];
-}
+    function add_tile_spawner(id: number, spawner: (id: number, x: number, y: number) => Entity): void {
+        this.spawners[id] ? this.spawners[id].push(spawner) : this.spawners[id] = [spawner];
+    }
+
+    return {
+        flags: [],
+        spawners: [],
+        add_tiles_flag,
+        add_tile_spawner
+    }
+};
 
 /* TILEMAP */
 

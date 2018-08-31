@@ -14,7 +14,7 @@ interface TextBoxData {
 type Textbox = Entity & InputListener & TextBoxData;
 
 
-const create_textbox: (x: number, y: number, w: number, text: string, small_font?: boolean) => Textbox = (x, y, w, text, small_font = true) => {
+const create_textbox: (x: number, y: number, text: string, w?: number, small_font?: boolean) => Textbox = (x, y, text, w = 120, small_font = true) => {
 
     function on_input(input: InputState, state: any) {
         if (is_pressed(input, Button.A)) {
